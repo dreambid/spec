@@ -18,9 +18,9 @@
         .progress-label { font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 6px; }
         .bar-bg { background: #e5e7eb; border-radius: 10px; height: 18px; overflow: hidden; }
         .bar-fill { background: linear-gradient(90deg, #22c55e, #16a34a); height: 100%; width: 0%; transition: width 0.05s linear; }
-        .canvas-wrap { border: 2px dashed #e5e7eb; border-radius: 12px; min-height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; background: #f9fafb; }
+        .canvas-wrap { border: 2px dashed #e5e7eb; border-radius: 12px; min-height: 200px; display: flex; align-items: flex-start; justify-content: center; margin-bottom: 20px; background: #f9fafb; padding: 10px; }
         canvas { max-width: 100%; display: block; }
-        .placeholder { color: #9ca3af; font-size: 14px; text-align: center; padding: 40px; }
+        .placeholder { color: #9ca3af; font-size: 14px; text-align: center; padding: 40px; align-self: center; }
         .dl-btn { display: none; width: 100%; padding: 16px; background: #22c55e; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Malgun Gothic', 'Noto Sans KR', sans-serif; }
         .dl-btn:hover { background: #16a34a; }
     </style>
@@ -29,7 +29,7 @@
 <div class="container">
     <h1>🚀 우리 회사 전용 스펙 이미지 제작기</h1>
     <div class="input-row">
-        <input type="text" id="modelInput" placeholder="모델명 입력 (예: AW06C7155GWAZ, PQ08FDWAS)">
+        <input type="text" id="modelInput" placeholder="모델명 입력 (예: 75UT9300BNA, AW06C7155GWAZ)">
         <button onclick="startProcess()">이미지 생성</button>
     </div>
     <div class="progress-wrap" id="progressWrap">
@@ -43,60 +43,45 @@
 </div>
 
 <script>
-function parseSpecs(model) {
-    const m = model.toUpperCase().replace(/\s/g, '');
-    let specs = {
-        emcCert: "상세페이지 참조",
-        safetyCert: "상세페이지 참조",
-        size: "제조사 공식 규격",
-        weight: "제품별 상이",
-        capacityLabel: "주요 용량/성능",
-        capacity: "상세페이지 참조",
-        voltage: "220V~, 60Hz",
-        power: "상세페이지 참조",
-        releaseDate: "상세페이지 참조",
-        manufacturer: "국내 대기업",
-        energyGrade: "상세페이지 참조",
-        madeIn: "상세페이지 참조",
-        asCenter: "제조사 고객센터",
-        warranty: "소비자분쟁해결기준(소비자기본법 제16조)에 따라 보상 가능"
-    };
-    if (m.startsWith('AW')) {
-        const cap = m.substring(2, 4);
-        specs.emcCert = "R-R-SEC-" + m.substring(0, 12);
-        specs.safetyCert = "전기용품 안전인증 - 상세페이지 참조";
-        specs.size = "400 x 750 x 290 mm";
-        specs.weight = "23.5 kg";
-        specs.capacityLabel = "냉방 용량";
-        specs.capacity = cap === '05' ? "1.46kW (17.0㎡ / 5평형)" : cap === '06' ? "1.72kW (19.2㎡ / 6평형)" : "상세페이지 참조";
-        specs.voltage = "220V~, 60Hz";
-        specs.power = "740W";
-        specs.releaseDate = "상세페이지 참조";
-        specs.manufacturer = "삼성전자(주)";
-        specs.energyGrade = "상세페이지 참조";
-        specs.madeIn = "중국";
-        specs.asCenter = "삼성전자서비스 / 1588-3366";
-    } else if (m.startsWith('PQ')) {
-        const cap = m.substring(2, 4);
-        specs.emcCert = "R-R-LGE-" + m.substring(0, 8);
-        specs.safetyCert = "전기용품 안전인증 - 상세페이지 참조";
-        specs.size = "493 x 773 x 496 mm";
-        specs.weight = "30.0 kg";
-        specs.capacityLabel = "냉방 용량";
-        specs.capacity = cap === '08' ? "2.3kW (26.0㎡ / 8평형)" : cap === '17' ? "5.0kW (56.9㎡ / 17평형)" : "상세페이지 참조";
-        specs.voltage = "220V~, 60Hz";
-        specs.power = "인버터 절전형 / 상세페이지 참조";
-        specs.releaseDate = "상세페이지 참조";
-        specs.manufacturer = "LG전자(주)";
-        specs.energyGrade = "상세페이지 참조";
-        specs.madeIn = "태국";
-        specs.asCenter = "LG전자서비스센터 / 1544-7777";
-    }
-    return specs;
+async function fetchSpecsFromAI(modelName) {
+    const prompt = `한국 가전제품 모델명 "${modelName}" 의 고지정보를 아래 JSON 형식으로 반환해줘.
+모르는 항목은 "상세페이지 참조" 로 써줘.
+반드시 JSON만 반환하고 다른 텍스트는 절대 포함하지 마.
+
+{
+  "emcCert": "전자파 적합성 인증(등록) 번호",
+  "safetyCert": "전기용품 안전인증(확인신고) 번호",
+  "size": "크기 WxHxD (mm)",
+  "weight": "무게 (kg)",
+  "capacityLabel": "용량 항목명 (예: 냉방 용량, 세탁 용량, 화면 크기 등)",
+  "capacity": "용량 값",
+  "voltage": "정격전압",
+  "power": "소비전력",
+  "releaseDate": "출시년월 (예: 2023-05)",
+  "manufacturer": "제조자(수입자)",
+  "energyGrade": "에너지 소비효율등급",
+  "madeIn": "제조국",
+  "asCenter": "A/S 책임자와 전화번호",
+  "warranty": "품질보증기준"
+}`;
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1000,
+            messages: [{ role: "user", content: prompt }]
+        })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(i => i.text || "").join("");
+    const clean = text.replace(/```json|```/g, "").trim();
+    return JSON.parse(clean);
 }
 
-function drawSpecImage(modelName) {
-    const specs = parseSpecs(modelName);
+function drawSpecImage(modelName, specs) {
     const FONT = '"Malgun Gothic", "Noto Sans KR", sans-serif';
     const SCALE = 3;
 
@@ -105,7 +90,7 @@ function drawSpecImage(modelName) {
         ["전기용품 안전인증(확인신고) 번호", specs.safetyCert],
         ["크기 (WxHxD)", specs.size],
         ["무게 (kg)", specs.weight],
-        [specs.capacityLabel, specs.capacity],
+        [specs.capacityLabel || "주요 용량/성능", specs.capacity],
         ["정격전압 (V/Hz)", specs.voltage],
         ["소비전력 (W)", specs.power],
         ["동일모델의 출시년월", specs.releaseDate],
@@ -116,9 +101,8 @@ function drawSpecImage(modelName) {
         ["품질보증기준", specs.warranty]
     ];
 
-    const W = 750, col1W = 260, headerH = 54, rowH = 42, lastRowH = 65;
-    const footerH = 40;
-    const H = headerH + (rows.length - 1) * rowH + lastRowH + footerH + 10;
+    const W = 750, col1W = 260, headerH = 54, rowH = 42, lastRowH = 65, footerH = 50;
+    const H = headerH + (rows.length - 1) * rowH + lastRowH + footerH;
 
     const canvas = document.createElement('canvas');
     canvas.width = W * SCALE;
@@ -169,19 +153,16 @@ function drawSpecImage(modelName) {
         }
     });
 
-    // 하단 테두리선
     const bottomY = headerH + (rows.length - 1) * rowH + lastRowH;
     ctx.strokeStyle = '#dde4f0'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, bottomY); ctx.lineTo(W, bottomY); ctx.stroke();
 
-    // 하단 안내문구
     ctx.fillStyle = '#6b7280';
     ctx.font = `12px ${FONT}`;
     ctx.textAlign = 'center';
-    ctx.fillText('해당 모델의 제품 상세 이미지 및 제품 정보는 제조사 홈페이지 또는 매장에서 확인 바랍니다.', W / 2, bottomY + 26);
+    ctx.fillText('해당 모델의 제품 상세 이미지 및 제품 정보는 제조사 홈페이지 또는 매장에서 확인 바랍니다.', W / 2, bottomY + 30);
     ctx.textAlign = 'left';
 
-    // 바깥 테두리
     ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = 2;
     ctx.strokeRect(1, 1, W - 2, H - 2);
 
@@ -190,36 +171,52 @@ function drawSpecImage(modelName) {
 
 let generatedCanvas = null;
 
-function startProcess() {
+async function startProcess() {
     const modelName = document.getElementById('modelInput').value.trim();
     if (!modelName) { alert('모델명을 입력해주세요!'); return; }
+
     document.getElementById('placeholder').style.display = 'none';
     document.getElementById('dlBtn').style.display = 'none';
     document.getElementById('progressWrap').style.display = 'block';
+
     const label = document.getElementById('progressLabel');
     const fill = document.getElementById('barFill');
     const wrap = document.getElementById('canvasWrap');
     const old = wrap.querySelector('canvas');
     if (old) wrap.removeChild(old);
+
+    // 프로그레스바 애니메이션
     let pct = 0;
     fill.style.width = '0%';
+    label.innerText = '🔍 AI가 모델명 분석 중...';
+
     const iv = setInterval(() => {
-        pct += 4;
-        if (pct <= 30) label.innerText = `🔍 모델명 분석 중... ${pct}%`;
-        else if (pct <= 70) label.innerText = `⚙️ 스펙 데이터 추출 중... ${pct}%`;
-        else if (pct < 100) label.innerText = `🎨 이미지 렌더링 중... ${pct}%`;
-        else {
-            label.innerText = '✅ 완료! 100%';
-            fill.style.width = '100%';
-            clearInterval(iv);
-            document.fonts.ready.then(() => {
-                generatedCanvas = drawSpecImage(modelName);
-                wrap.appendChild(generatedCanvas);
-                document.getElementById('dlBtn').style.display = 'block';
-            });
+        if (pct < 85) {
+            pct += 2;
+            fill.style.width = pct + '%';
+            if (pct < 30) label.innerText = `🔍 AI가 모델 검색 중... ${pct}%`;
+            else if (pct < 60) label.innerText = `⚙️ 스펙 데이터 추출 중... ${pct}%`;
+            else label.innerText = `🎨 이미지 렌더링 준비 중... ${pct}%`;
         }
-        fill.style.width = pct + '%';
-    }, 25);
+    }, 80);
+
+    try {
+        const specs = await fetchSpecsFromAI(modelName);
+        clearInterval(iv);
+        pct = 100;
+        fill.style.width = '100%';
+        label.innerText = '✅ 완료! 100%';
+
+        await document.fonts.ready;
+        generatedCanvas = drawSpecImage(modelName, specs);
+        wrap.appendChild(generatedCanvas);
+        document.getElementById('dlBtn').style.display = 'block';
+    } catch (e) {
+        clearInterval(iv);
+        label.innerText = '❌ 오류 발생. 다시 시도해주세요.';
+        fill.style.background = '#ef4444';
+        console.error(e);
+    }
 }
 
 function downloadImage() {
