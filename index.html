@@ -6,13 +6,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Noto Sans KR', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; }
-        .container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); width: 100%; max-width: 780px; }
+        body { font-family: 'Malgun Gothic', 'Noto Sans KR', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; }
+        .container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); width: 100%; max-width: 820px; }
         h1 { color: #1e3a8a; font-size: 24px; margin-bottom: 24px; font-weight: bold; text-align: center; }
         .input-row { display: flex; gap: 10px; margin-bottom: 24px; }
-        input { flex: 1; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; }
+        input { flex: 1; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: 'Malgun Gothic', 'Noto Sans KR', sans-serif; outline: none; }
         input:focus { border-color: #3b82f6; }
-        button { background: #1e3a8a; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; font-family: 'Noto Sans KR', sans-serif; white-space: nowrap; }
+        button { background: #1e3a8a; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; font-family: 'Malgun Gothic', 'Noto Sans KR', sans-serif; white-space: nowrap; }
         button:hover { background: #1d4ed8; }
         .progress-wrap { display: none; margin-bottom: 20px; }
         .progress-label { font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 6px; }
@@ -21,7 +21,7 @@
         .canvas-wrap { border: 2px dashed #e5e7eb; border-radius: 12px; min-height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; background: #f9fafb; }
         canvas { max-width: 100%; display: block; }
         .placeholder { color: #9ca3af; font-size: 14px; text-align: center; padding: 40px; }
-        .dl-btn { display: none; width: 100%; padding: 16px; background: #22c55e; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+        .dl-btn { display: none; width: 100%; padding: 16px; background: #22c55e; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Malgun Gothic', 'Noto Sans KR', sans-serif; }
         .dl-btn:hover { background: #16a34a; }
     </style>
 </head>
@@ -46,83 +46,135 @@
 function parseSpecs(model) {
     const m = model.toUpperCase().replace(/\s/g, '');
     let specs = {
-        brand: "국내 대기업 정품",
-        type: "가전제품",
-        cap: "상세페이지 참조",
+        emcCert: "상세페이지 참조",
+        safetyCert: "상세페이지 참조",
         size: "제조사 공식 규격",
         weight: "제품별 상이",
-        power: "220V~, 60Hz",
-        cert: "국가기술표준원 안전인증 완료"
+        capacityLabel: "주요 용량/성능",
+        capacity: "상세페이지 참조",
+        voltage: "220V~, 60Hz",
+        power: "상세페이지 참조",
+        releaseDate: "상세페이지 참조",
+        manufacturer: "국내 대기업",
+        energyGrade: "상세페이지 참조",
+        madeIn: "상세페이지 참조",
+        asCenter: "제조사 고객센터",
+        warranty: "소비자분쟁해결기준(소비자기본법 제16조)에 따라 보상 가능"
     };
     if (m.startsWith('AW')) {
-        specs.brand = "삼성전자 (SAMSUNG)";
-        specs.type = "윈도우핏 창문형 에어컨";
         const cap = m.substring(2, 4);
-        if (cap === '05') specs.cap = "17.0 ㎡ (5평형)";
-        else if (cap === '06') specs.cap = "19.2 ㎡ (6평형)";
-        else specs.cap = "약 5~6평형 대용량";
-        specs.size = "400 x 750 x 290 mm (창틀 매립형)";
-        specs.weight = "약 23.5 kg";
-        specs.power = "220V~, 60Hz / 소비전력 약 740W";
-        specs.cert = "R-R-SEC-AW06C7155 / 안전인증 유효";
-    } else if (m.startsWith('PQ') || m.startsWith('FQ')) {
-        specs.brand = "LG전자 (LG WHISEN)";
-        specs.type = m.startsWith('PQ') ? "휘센 오브제컬렉션 이동식 에어컨" : "휘센 스탠드형 에어컨";
+        specs.emcCert = "R-R-SEC-" + m.substring(0, 12);
+        specs.safetyCert = "전기용품 안전인증 - 상세페이지 참조";
+        specs.size = "400 x 750 x 290 mm";
+        specs.weight = "23.5 kg";
+        specs.capacityLabel = "냉방 용량";
+        specs.capacity = cap === '05' ? "1.46kW (17.0㎡ / 5평형)" : cap === '06' ? "1.72kW (19.2㎡ / 6평형)" : "상세페이지 참조";
+        specs.voltage = "220V~, 60Hz";
+        specs.power = "740W";
+        specs.releaseDate = "상세페이지 참조";
+        specs.manufacturer = "삼성전자(주)";
+        specs.energyGrade = "상세페이지 참조";
+        specs.madeIn = "중국";
+        specs.asCenter = "삼성전자서비스 / 1588-3366";
+    } else if (m.startsWith('PQ')) {
         const cap = m.substring(2, 4);
-        if (cap === '08') specs.cap = "26.0 ㎡ (8평형)";
-        else if (cap === '17') specs.cap = "56.9 ㎡ (17평형)";
-        else specs.cap = "정격 냉방 용량 매칭 완료";
-        specs.size = m.startsWith('PQ') ? "493 x 773 x 496 mm" : "390 x 1830 x 300 mm";
-        specs.weight = m.startsWith('PQ') ? "30.0 kg" : "약 28 kg";
-        specs.power = "220V~, 60Hz / 인버터 절전형";
-        specs.cert = "R-R-LGE-AC75B / 전기용품 안전인증";
+        specs.emcCert = "R-R-LGE-" + m.substring(0, 8);
+        specs.safetyCert = "전기용품 안전인증 - 상세페이지 참조";
+        specs.size = "493 x 773 x 496 mm";
+        specs.weight = "30.0 kg";
+        specs.capacityLabel = "냉방 용량";
+        specs.capacity = cap === '08' ? "2.3kW (26.0㎡ / 8평형)" : cap === '17' ? "5.0kW (56.9㎡ / 17평형)" : "상세페이지 참조";
+        specs.voltage = "220V~, 60Hz";
+        specs.power = "인버터 절전형 / 상세페이지 참조";
+        specs.releaseDate = "상세페이지 참조";
+        specs.manufacturer = "LG전자(주)";
+        specs.energyGrade = "상세페이지 참조";
+        specs.madeIn = "태국";
+        specs.asCenter = "LG전자서비스센터 / 1544-7777";
     }
     return specs;
 }
 
 function drawSpecImage(modelName) {
     const specs = parseSpecs(modelName);
+    const FONT = '"Malgun Gothic", "Noto Sans KR", sans-serif';
+    const SCALE = 3; // ← 해상도 3배! 선명하게!
+
     const rows = [
-        ["제조사 (Brand)", specs.brand],
-        ["제품 품목 (Type)", specs.type],
-        ["모델명 (Model)", modelName.toUpperCase()],
-        ["냉방면적 / 용량", specs.cap],
-        ["외관 크기 (WxHxD)", specs.size],
-        ["제품 무게 (Weight)", specs.weight],
-        ["정격 전압 / 소비전력", specs.power],
-        ["안전인증 고지번호", specs.cert],
-        ["품질보증기준", "소비자분쟁해결기준에 의거 보상 가능"]
+        ["전자파 적합성 인증(등록) 번호", specs.emcCert],
+        ["전기용품 안전인증(확인신고) 번호", specs.safetyCert],
+        ["크기 (WxHxD)", specs.size],
+        ["무게 (kg)", specs.weight],
+        [specs.capacityLabel, specs.capacity],
+        ["정격전압 (V/Hz)", specs.voltage],
+        ["소비전력 (W)", specs.power],
+        ["동일모델의 출시년월", specs.releaseDate],
+        ["제조자 (수입자)", specs.manufacturer],
+        ["에너지 소비효율등급", specs.energyGrade],
+        ["제조국", specs.madeIn],
+        ["A/S 책임자와 전화번호", specs.asCenter],
+        ["품질보증기준", specs.warranty]
     ];
-    const W = 700, headerH = 54, rowH = 44;
-    const H = headerH + rows.length * rowH + 20;
+
+    const W = 750, col1W = 240, headerH = 54, rowH = 40, lastRowH = 60;
+    const H = headerH + (rows.length - 1) * rowH + lastRowH + 10;
+
     const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
+    // 실제 픽셀은 3배, CSS 표시 크기는 원래 크기
+    canvas.width = W * SCALE;
+    canvas.height = H * SCALE;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+
     const ctx = canvas.getContext('2d');
+    ctx.scale(SCALE, SCALE); // 전체 3배 스케일 적용
+
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#1e3a8a'; ctx.fillRect(0, 0, W, headerH);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 15px "Noto Sans KR", sans-serif';
-    ctx.fillText('■  PRODUCT SPECIFICATION  (제품 상세 고지정보)', 20, 33);
-    const col1W = 220;
+    ctx.font = `bold 16px ${FONT}`;
+    ctx.fillText('고지정보', 20, 34);
+
     rows.forEach((row, i) => {
+        const isLast = i === rows.length - 1;
+        const rH = isLast ? lastRowH : rowH;
         const y = headerH + i * rowH;
-        ctx.fillStyle = i % 2 === 0 ? '#f0f4ff' : '#ffffff';
-        ctx.fillRect(0, y, W, rowH);
+
+        ctx.fillStyle = i % 2 === 0 ? '#f7f9ff' : '#ffffff';
+        ctx.fillRect(0, y, W, rH);
         ctx.strokeStyle = '#dde4f0'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(col1W, y); ctx.lineTo(col1W, y + rowH); ctx.stroke();
-        ctx.fillStyle = '#1e3a8a';
-        ctx.font = 'bold 13px "Noto Sans KR", sans-serif';
-        ctx.fillText(row[0], 16, y + 27);
+        ctx.beginPath(); ctx.moveTo(col1W, y); ctx.lineTo(col1W, y + rH); ctx.stroke();
+
+        ctx.fillStyle = '#374151';
+        ctx.font = `bold 12px ${FONT}`;
+        ctx.fillText(row[0], 14, y + 25);
+
         ctx.fillStyle = '#111827';
-        ctx.font = '13px "Noto Sans KR", sans-serif';
-        ctx.fillText(row[1], col1W + 14, y + 27);
+        ctx.font = `13px ${FONT}`;
+
+        if (isLast) {
+            const maxW = W - col1W - 20;
+            const words = row[1].split(' ');
+            let line = '', lines = [];
+            for (const w of words) {
+                const test = line ? line + ' ' + w : w;
+                if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+                else line = test;
+            }
+            if (line) lines.push(line);
+            lines.forEach((l, li) => ctx.fillText(l, col1W + 14, y + 20 + li * 20));
+        } else {
+            ctx.fillText(row[1], col1W + 14, y + 25);
+        }
     });
-    const lastY = headerH + rows.length * rowH;
+
+    const bottomY = headerH + (rows.length - 1) * rowH + lastRowH;
     ctx.strokeStyle = '#dde4f0'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, lastY); ctx.lineTo(W, lastY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, bottomY); ctx.lineTo(W, bottomY); ctx.stroke();
     ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = 2;
     ctx.strokeRect(1, 1, W - 2, H - 2);
+
     return canvas;
 }
 
@@ -164,7 +216,7 @@ function downloadImage() {
     if (!generatedCanvas) return;
     const modelName = document.getElementById('modelInput').value.trim().toUpperCase();
     const link = document.createElement('a');
-    link.download = `스펙고지정보_${modelName}.png`;
+    link.download = `고지정보_${modelName}.png`;
     link.href = generatedCanvas.toDataURL('image/png');
     link.click();
 }
