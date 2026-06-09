@@ -13,14 +13,13 @@
         button { background-color: #1e3a8a; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         button:hover { background-color: #1d4ed8; }
         
-        /* 📊 작업 실행률 로딩바 디자인 */
         .progress-container { display: none; margin-bottom: 25px; text-align: left; }
         .progress-text { font-size: 14px; font-weight: bold; color: #1e3a8a; margin-bottom: 8px; }
         .progress-bar-bg { background-color: #e5e7eb; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; }
         .progress-bar-fill { background-color: #22c55e; height: 100%; width: 0%; transition: width 0.1s linear; }
 
         .image-area { border: 2px dashed #e5e7eb; background-color: #f9fafb; min-height: 450px; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 25px; overflow: hidden; }
-        .image-area img { max-width: 100%; height: auto; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .image-area img { max-width: 100%; height: auto; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #ddd; }
         .download-btn { display: none; background-color: #22c55e; width: 100%; padding: 16px; font-size: 18px; text-decoration: none; color: white; border-radius: 8px; font-weight: bold; text-align: center; box-sizing: border-box; }
         .download-btn:hover { background-color: #16a34a; }
     </style>
@@ -87,8 +86,8 @@
             if (!modelName) { alert('모델명을 입력해주세요!'); return; }
 
             document.getElementById('placeholderText').style.display = 'none';
-            document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('imageArea').innerHTML = '';
+            document.getElementById('downloadBtn').style.display = 'none';
             
             const container = document.getElementById('progressContainer');
             const textField = document.getElementById('progressText');
@@ -112,12 +111,14 @@
                     generateImage(modelName);
                 }
                 fillBar.style.width = percent + '%';
-            }, 40); 
+            }, 30); 
         }
 
         function generateImage(modelName) {
             const parsed = parseModelSpecs(modelName);
-            const chartConfig = {
+            
+            // 🛠️ 주소 꼬임 문제를 완벽하게 해결한 표준 데이터 구조
+            const chartData = {
                 type: 'data-table',
                 data: [
                     ['<b>주요 제품 사양 (Key Specs)</b>', ''],
@@ -137,12 +138,18 @@
                 }
             };
 
-            // 🛠️ 기호가 꼬이지 않도록 완벽하게 수정한 주소 결합 방식
-            const encodedConfig = encodeURIComponent(JSON.stringify(chartConfig));
-            const apiUrl = "https://quickchart.io/chart?c=" + encodedConfig + "&format=png&width=700&height=480";
+            // URL을 안전하게 인코딩하여 백틱(`) 기호로 한방에 결합
+            const encoded = encodeURIComponent(JSON.stringify(chartData));
+            const apiUrl = `https://quickchart.io/chart?c=${encoded}&format=png&width=700&height=480`;
 
-            document.getElementById('imageArea').innerHTML = "<img src='" + apiUrl + "' alt='상세페이지 결과물'>";
+            // 진짜 화면에 이미지 꽂아넣기
+            const imageArea = document.getElementById('imageArea');
+            const imgTag = document.createElement('img');
+            imgTag.src = apiUrl;
+            imgTag.alt = '상세페이지 결과물';
+            imageArea.appendChild(imgTag);
             
+            // 다운로드 버튼 열기
             const downloadBtn = document.getElementById('downloadBtn');
             downloadBtn.href = apiUrl;
             downloadBtn.style.display = 'block';
