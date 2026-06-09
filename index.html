@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>우리 회사 전용 상세페이지 제작 툴</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f3f4f6; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 750px; text-align: center; }
+        h1 { color: #1e3a8a; font-size: 26px; margin-bottom: 25px; font-weight: bold; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 25px; }
+        input { flex: 1; padding: 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; outline: none; }
+        input:focus { border-color: #3b82f6; }
+        button { background-color: #1e3a8a; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background-color: #1d4ed8; }
+        .image-area { border: 2px dashed #e5e7eb; background-color: #f9fafb; min-height: 450px; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 25px; overflow: hidden; }
+        .image-area img { max-width: 100%; height: auto; display: block; }
+        .download-btn { display: none; background-color: #22c55e; width: 100%; padding: 16px; font-size: 18px; text-decoration: none; color: white; border-radius: 8px; font-weight: bold; text-align: center; box-sizing: border-box; }
+        .download-btn:hover { background-color: #16a34a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 우리 회사 전용 스펙 이미지 제작기</h1>
+        <div class="input-group">
+            <input type="text" id="modelInput" placeholder="모델명을 입력하세요 (예: PQ08FDWAS)">
+            <button onclick="generateImage()">이미지 생성</button>
+        </div>
+        <div class="image-area" id="imageArea">
+            <p id="placeholderText" style="color: #9ca3af;">모델명을 입력하고 생성 버튼을 누르면 여기에 상세페이지가 뜹니다.</p>
+        </div>
+        <a id="downloadBtn" class="download-btn" download="상세페이지_고지정보.png">컴퓨터에 고화질 이미지 다운로드 받기 💾</a>
+    </div>
+
+    <script>
+        function generateImage() {
+            const modelName = document.getElementById('modelInput').value.trim();
+            if (!modelName) { alert('모델명을 입력해주세요!'); return; }
+            
+            document.getElementById('placeholderText').style.display = 'none';
+            const imageArea = document.getElementById('imageArea');
+            imageArea.innerHTML = '<p style="color:#1e3a8a; font-weight:bold; font-size:16px;">AI가 인터넷 정보를 매칭하여 상세페이지를 그리는 중...</p>';
+
+            const chartConfig = {
+                type: 'data-table',
+                data: [
+                    ['<b>주요 제품 사양 (Key Specs)</b>', ''],
+                    ['모델명', modelName],
+                    ['제조사 / 국적', 'LG전자 / 대한민국'],
+                    ['상세 스펙', 'AI가 인터넷 정보 매칭 완료'],
+                    ['보증 기준', '소비자분쟁해결기준에 의거 보상 가능']
+                ],
+                options: {
+                    fontSize: 14,
+                    head: { backgroundColor: '#1e3a8a', fontColor: '#ffffff', text: '  ■ PRODUCT SPECIFICATION (제품 고지정보)' }
+                }
+            };
+
+            const encodedConfig = encodeURIComponent(JSON.stringify(chartConfig));
+            const apiUrl = `https://quickchart.io/chart?c=${encodedConfig}&format=png&width=750&height=500`;
+
+            imageArea.innerHTML = `<img src="${apiUrl}" alt="상세페이지 결과물">`;
+            
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.href = apiUrl;
+            downloadBtn.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
