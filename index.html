@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>스펙 이미지 제작기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Malgun Gothic', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; }
+        body { font-family: 'Noto Sans KR', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; }
         .container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); width: 100%; max-width: 780px; }
         h1 { color: #1e3a8a; font-size: 24px; margin-bottom: 24px; font-weight: bold; text-align: center; }
         .input-row { display: flex; gap: 10px; margin-bottom: 24px; }
-        input { flex: 1; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: 'Malgun Gothic', sans-serif; outline: none; }
+        input { flex: 1; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: 'Noto Sans KR', sans-serif; outline: none; }
         input:focus { border-color: #3b82f6; }
-        button { background: #1e3a8a; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; font-family: 'Malgun Gothic', sans-serif; white-space: nowrap; }
+        button { background: #1e3a8a; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; font-family: 'Noto Sans KR', sans-serif; white-space: nowrap; }
         button:hover { background: #1d4ed8; }
         .progress-wrap { display: none; margin-bottom: 20px; }
         .progress-label { font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 6px; }
@@ -20,7 +21,7 @@
         .canvas-wrap { border: 2px dashed #e5e7eb; border-radius: 12px; min-height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; background: #f9fafb; }
         canvas { max-width: 100%; display: block; }
         .placeholder { color: #9ca3af; font-size: 14px; text-align: center; padding: 40px; }
-        .dl-btn { display: none; width: 100%; padding: 16px; background: #22c55e; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Malgun Gothic', sans-serif; }
+        .dl-btn { display: none; width: 100%; padding: 16px; background: #22c55e; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
         .dl-btn:hover { background: #16a34a; }
     </style>
 </head>
@@ -100,7 +101,7 @@ function drawSpecImage(modelName) {
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#1e3a8a'; ctx.fillRect(0, 0, W, headerH);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+    ctx.font = 'bold 15px "Noto Sans KR", sans-serif';
     ctx.fillText('■  PRODUCT SPECIFICATION  (제품 상세 고지정보)', 20, 33);
     const col1W = 220;
     rows.forEach((row, i) => {
@@ -111,10 +112,10 @@ function drawSpecImage(modelName) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(col1W, y); ctx.lineTo(col1W, y + rowH); ctx.stroke();
         ctx.fillStyle = '#1e3a8a';
-        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+        ctx.font = 'bold 13px "Noto Sans KR", sans-serif';
         ctx.fillText(row[0], 16, y + 27);
         ctx.fillStyle = '#111827';
-        ctx.font = '13px Malgun Gothic, sans-serif';
+        ctx.font = '13px "Noto Sans KR", sans-serif';
         ctx.fillText(row[1], col1W + 14, y + 27);
     });
     const lastY = headerH + rows.length * rowH;
@@ -149,9 +150,11 @@ function startProcess() {
             label.innerText = '✅ 완료! 100%';
             fill.style.width = '100%';
             clearInterval(iv);
-            generatedCanvas = drawSpecImage(modelName);
-            wrap.appendChild(generatedCanvas);
-            document.getElementById('dlBtn').style.display = 'block';
+            document.fonts.ready.then(() => {
+                generatedCanvas = drawSpecImage(modelName);
+                wrap.appendChild(generatedCanvas);
+                document.getElementById('dlBtn').style.display = 'block';
+            });
         }
         fill.style.width = pct + '%';
     }, 25);
