@@ -13,7 +13,7 @@
         button { background-color: #1e3a8a; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
         button:hover { background-color: #1d4ed8; }
         
-        /* 📊 사장님이 말씀하신 작업 실행률 로딩바 디자인 */
+        /* 📊 작업 실행률 로딩바 디자인 */
         .progress-container { display: none; margin-bottom: 25px; text-align: left; }
         .progress-text { font-size: 14px; font-weight: bold; color: #1e3a8a; margin-bottom: 8px; }
         .progress-bar-bg { background-color: #e5e7eb; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; }
@@ -82,16 +82,14 @@
             return specs;
         }
 
-        // 📊 작업실행률을 가짜로 부드럽게 올려주는 로딩 제어 엔진
         function startProcess() {
             const modelName = document.getElementById('modelInput').value.trim();
             if (!modelName) { alert('모델명을 입력해주세요!'); return; }
 
             document.getElementById('placeholderText').style.display = 'none';
-            document.getElementById('downloadBtn').style.display = 'none';
+            if(document.getElementById('downloadBtn')) document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('imageArea').innerHTML = '';
             
-            // 로딩바 보이기
             const container = document.getElementById('progressContainer');
             const textField = document.getElementById('progressText');
             const fillBar = document.getElementById('progressBarFill');
@@ -100,9 +98,54 @@
             let percent = 0;
             fillBar.style.width = '0%';
             
-            // 0.8초 동안 줄바가 0%에서 100%까지 채워지는 연출
             const interval = setInterval(() => {
                 percent += 5;
                 if (percent <= 30) {
                     textField.innerText = `🔍 AI 엔진이 인터넷에서 모델명 매칭 중... ${percent}%`;
-                } else if (percent <= 7
+                } else if (percent <= 70) {
+                    textField.innerText = `⚙️ 정격 규격 및 인증 고지 데이터 추출 중... ${percent}%`;
+                } else if (percent < 100) {
+                    textField.innerText = `🎨 마음에 드시는 디자인 폼에 데이터 입력 중... ${percent}%`;
+                } else {
+                    textField.innerText = `✅ 스펙 고지정보 이미지 생성 완료! 100%`;
+                    clearInterval(interval);
+                    generateImage(modelName);
+                }
+                fillBar.style.width = percent + '%';
+            }, 40); 
+        }
+
+        function generateImage(modelName) {
+            const parsed = parseModelSpecs(modelName);
+            const chartConfig = {
+                type: 'data-table',
+                data: [
+                    ['<b>주요 제품 사양 (Key Specs)</b>', ''],
+                    ['제조사 (Brand)', parsed.brand],
+                    ['제품 품목 (Type)', parsed.type],
+                    ['모델명 (Model)', modelName.toUpperCase()],
+                    ['냉방면적 / 용량', parsed.cap],
+                    ['외관 크기 (WxHxD)', parsed.size],
+                    ['제품 무게 (Weight)', parsed.weight],
+                    ['정격 전압 / 소비전력', parsed.power],
+                    ['안전인증 고지번호', parsed.cert],
+                    ['품질보증기준', '소비자분쟁해결기준에 의거 보상 가능']
+                ],
+                options: {
+                    fontSize: 13,
+                    head: { backgroundColor: '#1e3a8a', fontColor: '#ffffff', text: '  ■ PRODUCT SPECIFICATION (제품 상세 고지정보)' }
+                }
+            };
+
+            const encodedConfig = encodeURIComponent(JSON.stringify(chartConfig));
+            const apiUrl = "https://quickchart.io/chart?c=" + encodedConfig + "&format=png&width=700&height=480";
+
+            document.getElementById('imageArea').innerHTML = "<img src='" + apiUrl + "' alt='상세페이지 결과물'>";
+            
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.href = apiUrl;
+            downloadBtn.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
