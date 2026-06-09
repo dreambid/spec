@@ -20,7 +20,7 @@
         .progress-bar-fill { background-color: #22c55e; height: 100%; width: 0%; transition: width 0.1s linear; }
 
         .image-area { border: 2px dashed #e5e7eb; background-color: #f9fafb; min-height: 450px; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 25px; overflow: hidden; }
-        .image-area img { max-width: 100%; height: auto; display: block; }
+        .image-area img { max-width: 100%; height: auto; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .download-btn { display: none; background-color: #22c55e; width: 100%; padding: 16px; font-size: 18px; text-decoration: none; color: white; border-radius: 8px; font-weight: bold; text-align: center; box-sizing: border-box; }
         .download-btn:hover { background-color: #16a34a; }
     </style>
@@ -87,7 +87,7 @@
             if (!modelName) { alert('모델명을 입력해주세요!'); return; }
 
             document.getElementById('placeholderText').style.display = 'none';
-            if(document.getElementById('downloadBtn')) document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('imageArea').innerHTML = '';
             
             const container = document.getElementById('progressContainer');
@@ -137,6 +137,7 @@
                 }
             };
 
+            // 🛠️ 기호가 꼬이지 않도록 완벽하게 수정한 주소 결합 방식
             const encodedConfig = encodeURIComponent(JSON.stringify(chartConfig));
             const apiUrl = "https://quickchart.io/chart?c=" + encodedConfig + "&format=png&width=700&height=480";
 
