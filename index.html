@@ -98,7 +98,7 @@ function parseSpecs(model) {
 function drawSpecImage(modelName) {
     const specs = parseSpecs(modelName);
     const FONT = '"Malgun Gothic", "Noto Sans KR", sans-serif';
-    const SCALE = 3; // ← 해상도 3배! 선명하게!
+    const SCALE = 3;
 
     const rows = [
         ["전자파 적합성 인증(등록) 번호", specs.emcCert],
@@ -116,18 +116,17 @@ function drawSpecImage(modelName) {
         ["품질보증기준", specs.warranty]
     ];
 
-    const W = 750, col1W = 240, headerH = 54, rowH = 40, lastRowH = 60;
+    const W = 750, col1W = 260, headerH = 54, rowH = 42, lastRowH = 65;
     const H = headerH + (rows.length - 1) * rowH + lastRowH + 10;
 
     const canvas = document.createElement('canvas');
-    // 실제 픽셀은 3배, CSS 표시 크기는 원래 크기
     canvas.width = W * SCALE;
     canvas.height = H * SCALE;
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
 
     const ctx = canvas.getContext('2d');
-    ctx.scale(SCALE, SCALE); // 전체 3배 스케일 적용
+    ctx.scale(SCALE, SCALE);
 
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#1e3a8a'; ctx.fillRect(0, 0, W, headerH);
@@ -148,7 +147,7 @@ function drawSpecImage(modelName) {
 
         ctx.fillStyle = '#374151';
         ctx.font = `bold 12px ${FONT}`;
-        ctx.fillText(row[0], 14, y + 25);
+        ctx.fillText(row[0], 14, y + 26);
 
         ctx.fillStyle = '#111827';
         ctx.font = `13px ${FONT}`;
@@ -163,9 +162,9 @@ function drawSpecImage(modelName) {
                 else line = test;
             }
             if (line) lines.push(line);
-            lines.forEach((l, li) => ctx.fillText(l, col1W + 14, y + 20 + li * 20));
+            lines.forEach((l, li) => ctx.fillText(l, col1W + 14, y + 20 + li * 22));
         } else {
-            ctx.fillText(row[1], col1W + 14, y + 25);
+            ctx.fillText(row[1], col1W + 14, y + 26);
         }
     });
 
