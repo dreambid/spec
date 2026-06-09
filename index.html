@@ -2,158 +2,169 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>우리 회사 전용 상세페이지 제작 툴</title>
+    <title>스펙 이미지 제작기</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f3f4f6; margin: 0; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 750px; text-align: center; }
-        h1 { color: #1e3a8a; font-size: 26px; margin-bottom: 25px; font-weight: bold; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 25px; }
-        input { flex: 1; padding: 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 16px; outline: none; text-transform: uppercase; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Malgun Gothic', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; }
+        .container { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); width: 100%; max-width: 780px; }
+        h1 { color: #1e3a8a; font-size: 24px; margin-bottom: 24px; font-weight: bold; text-align: center; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 24px; }
+        input { flex: 1; padding: 14px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: 'Malgun Gothic', sans-serif; outline: none; }
         input:focus { border-color: #3b82f6; }
-        button { background-color: #1e3a8a; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
-        button:hover { background-color: #1d4ed8; }
-        
-        .progress-container { display: none; margin-bottom: 25px; text-align: left; }
-        .progress-text { font-size: 14px; font-weight: bold; color: #1e3a8a; margin-bottom: 8px; }
-        .progress-bar-bg { background-color: #e5e7eb; border-radius: 10px; height: 20px; width: 100%; overflow: hidden; }
-        .progress-bar-fill { background-color: #22c55e; height: 100%; width: 0%; transition: width 0.1s linear; }
-
-        .image-area { border: 2px dashed #e5e7eb; background-color: #f9fafb; min-height: 450px; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 25px; overflow: hidden; }
-        .image-area img { max-width: 100%; height: auto; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #ddd; }
-        .download-btn { display: none; background-color: #22c55e; width: 100%; padding: 16px; font-size: 18px; text-decoration: none; color: white; border-radius: 8px; font-weight: bold; text-align: center; box-sizing: border-box; }
-        .download-btn:hover { background-color: #16a34a; }
+        button { background: #1e3a8a; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; font-family: 'Malgun Gothic', sans-serif; white-space: nowrap; }
+        button:hover { background: #1d4ed8; }
+        .progress-wrap { display: none; margin-bottom: 20px; }
+        .progress-label { font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 6px; }
+        .bar-bg { background: #e5e7eb; border-radius: 10px; height: 18px; overflow: hidden; }
+        .bar-fill { background: linear-gradient(90deg, #22c55e, #16a34a); height: 100%; width: 0%; transition: width 0.05s linear; }
+        .canvas-wrap { border: 2px dashed #e5e7eb; border-radius: 12px; min-height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; background: #f9fafb; }
+        canvas { max-width: 100%; display: block; }
+        .placeholder { color: #9ca3af; font-size: 14px; text-align: center; padding: 40px; }
+        .dl-btn { display: none; width: 100%; padding: 16px; background: #22c55e; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; font-family: 'Malgun Gothic', sans-serif; }
+        .dl-btn:hover { background: #16a34a; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🚀 우리 회사 전용 스펙 이미지 제작기</h1>
-        <div class="input-group">
-            <input type="text" id="modelInput" placeholder="모델명을 입력하세요 (예: AW06C7155GWAZ, PQ08FDWAS)">
-            <button onclick="startProcess()">이미지 생성</button>
-        </div>
-
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-text" id="progressText">AI 엔진 분석 대기 중... 0%</div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progressBarFill"></div>
-            </div>
-        </div>
-
-        <div class="image-area" id="imageArea">
-            <p id="placeholderText" style="color: #9ca3af;">모델명을 입력하고 생성 버튼을 누르면 여기에 상세페이지가 뜹니다.</p>
-        </div>
-        <a id="downloadBtn" class="download-btn" download="상세페이지_고지정보.png">컴퓨터에 고화질 이미지 다운로드 받기 💾</a>
+<div class="container">
+    <h1>🚀 우리 회사 전용 스펙 이미지 제작기</h1>
+    <div class="input-row">
+        <input type="text" id="modelInput" placeholder="모델명 입력 (예: AW06C7155GWAZ, PQ08FDWAS)">
+        <button onclick="startProcess()">이미지 생성</button>
     </div>
+    <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label" id="progressLabel">준비 중... 0%</div>
+        <div class="bar-bg"><div class="bar-fill" id="barFill"></div></div>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap">
+        <div class="placeholder" id="placeholder">모델명을 입력하고 생성 버튼을 누르면 여기에 스펙 이미지가 생성됩니다.</div>
+    </div>
+    <button class="dl-btn" id="dlBtn" onclick="downloadImage()">💾 고화질 이미지 다운로드</button>
+</div>
 
-    <script>
-        function parseModelSpecs(model) {
-            const m = model.toUpperCase().replace(/\s/g, '');
-            let specs = {
-                brand: "국내 대기업 정품", type: "가전제품", cap: "상세페이지 참조",
-                size: "제조사 공식 규격", weight: "제품별 상이", power: "220V~, 60Hz",
-                cert: "국가기술표준원 안전인증 완료"
-            };
+<script>
+function parseSpecs(model) {
+    const m = model.toUpperCase().replace(/\s/g, '');
+    let specs = {
+        brand: "국내 대기업 정품",
+        type: "가전제품",
+        cap: "상세페이지 참조",
+        size: "제조사 공식 규격",
+        weight: "제품별 상이",
+        power: "220V~, 60Hz",
+        cert: "국가기술표준원 안전인증 완료"
+    };
+    if (m.startsWith('AW')) {
+        specs.brand = "삼성전자 (SAMSUNG)";
+        specs.type = "윈도우핏 창문형 에어컨";
+        const cap = m.substring(2, 4);
+        if (cap === '05') specs.cap = "17.0 ㎡ (5평형)";
+        else if (cap === '06') specs.cap = "19.2 ㎡ (6평형)";
+        else specs.cap = "약 5~6평형 대용량";
+        specs.size = "400 x 750 x 290 mm (창틀 매립형)";
+        specs.weight = "약 23.5 kg";
+        specs.power = "220V~, 60Hz / 소비전력 약 740W";
+        specs.cert = "R-R-SEC-AW06C7155 / 안전인증 유효";
+    } else if (m.startsWith('PQ') || m.startsWith('FQ')) {
+        specs.brand = "LG전자 (LG WHISEN)";
+        specs.type = m.startsWith('PQ') ? "휘센 오브제컬렉션 이동식 에어컨" : "휘센 스탠드형 에어컨";
+        const cap = m.substring(2, 4);
+        if (cap === '08') specs.cap = "26.0 ㎡ (8평형)";
+        else if (cap === '17') specs.cap = "56.9 ㎡ (17평형)";
+        else specs.cap = "정격 냉방 용량 매칭 완료";
+        specs.size = m.startsWith('PQ') ? "493 x 773 x 496 mm" : "390 x 1830 x 300 mm";
+        specs.weight = m.startsWith('PQ') ? "30.0 kg" : "약 28 kg";
+        specs.power = "220V~, 60Hz / 인버터 절전형";
+        specs.cert = "R-R-LGE-AC75B / 전기용품 안전인증";
+    }
+    return specs;
+}
 
-            if (m.startsWith('AW')) {
-                specs.brand = "삼성전자 (SAMSUNG)";
-                specs.type = "윈도우핏 창문형 에어컨";
-                let capNum = m.substring(2, 4);
-                if (capNum === '05') specs.cap = "17.0 ㎡ (5평형)";
-                else if (capNum === '06') specs.cap = "19.2 ㎡ (6평형)";
-                else specs.cap = "약 5~6평형 대용량";
-                specs.size = "400 x 750 x 290 mm (창틀 매립형)";
-                specs.weight = "약 23.5 kg";
-                specs.power = "220V~, 60Hz / 소비전력 약 740W";
-                specs.cert = "R-R-SEC-AW06C7155 / 안전인증 유효";
-            }
-            else if (m.startsWith('PQ') || m.startsWith('FQ')) {
-                specs.brand = "LG전자 (LG WHISEN)";
-                specs.type = m.startsWith('PQ') ? "휘센 오브제컬렉션 이동식 에어컨" : "휘센 스탠드형 에어컨";
-                let capNum = m.substring(2, 4);
-                if (capNum === '08') specs.cap = "26.0 ㎡ (8평형)";
-                else if (capNum === '17') specs.cap = "56.9 ㎡ (17평형)";
-                else specs.cap = "정격 냉방 용량 매칭 완료";
-                specs.size = m.startsWith('PQ') ? "493 x 773 x 496 mm" : "390 x 1830 x 300 mm";
-                specs.weight = m.startsWith('PQ') ? "30.0 kg" : "약 28 kg";
-                specs.power = "220V~, 60Hz / 인버터 절전형";
-                specs.cert = "R-R-LGE-AC75B / 전기용품 안전인증";
-            }
-            return specs;
+function drawSpecImage(modelName) {
+    const specs = parseSpecs(modelName);
+    const rows = [
+        ["제조사 (Brand)", specs.brand],
+        ["제품 품목 (Type)", specs.type],
+        ["모델명 (Model)", modelName.toUpperCase()],
+        ["냉방면적 / 용량", specs.cap],
+        ["외관 크기 (WxHxD)", specs.size],
+        ["제품 무게 (Weight)", specs.weight],
+        ["정격 전압 / 소비전력", specs.power],
+        ["안전인증 고지번호", specs.cert],
+        ["품질보증기준", "소비자분쟁해결기준에 의거 보상 가능"]
+    ];
+    const W = 700, headerH = 54, rowH = 44;
+    const H = headerH + rows.length * rowH + 20;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#1e3a8a'; ctx.fillRect(0, 0, W, headerH);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 15px Malgun Gothic, sans-serif';
+    ctx.fillText('■  PRODUCT SPECIFICATION  (제품 상세 고지정보)', 20, 33);
+    const col1W = 220;
+    rows.forEach((row, i) => {
+        const y = headerH + i * rowH;
+        ctx.fillStyle = i % 2 === 0 ? '#f0f4ff' : '#ffffff';
+        ctx.fillRect(0, y, W, rowH);
+        ctx.strokeStyle = '#dde4f0'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(col1W, y); ctx.lineTo(col1W, y + rowH); ctx.stroke();
+        ctx.fillStyle = '#1e3a8a';
+        ctx.font = 'bold 13px Malgun Gothic, sans-serif';
+        ctx.fillText(row[0], 16, y + 27);
+        ctx.fillStyle = '#111827';
+        ctx.font = '13px Malgun Gothic, sans-serif';
+        ctx.fillText(row[1], col1W + 14, y + 27);
+    });
+    const lastY = headerH + rows.length * rowH;
+    ctx.strokeStyle = '#dde4f0'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, lastY); ctx.lineTo(W, lastY); ctx.stroke();
+    ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+    return canvas;
+}
+
+let generatedCanvas = null;
+
+function startProcess() {
+    const modelName = document.getElementById('modelInput').value.trim();
+    if (!modelName) { alert('모델명을 입력해주세요!'); return; }
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('dlBtn').style.display = 'none';
+    document.getElementById('progressWrap').style.display = 'block';
+    const label = document.getElementById('progressLabel');
+    const fill = document.getElementById('barFill');
+    const wrap = document.getElementById('canvasWrap');
+    const old = wrap.querySelector('canvas');
+    if (old) wrap.removeChild(old);
+    let pct = 0;
+    fill.style.width = '0%';
+    const iv = setInterval(() => {
+        pct += 4;
+        if (pct <= 30) label.innerText = `🔍 모델명 분석 중... ${pct}%`;
+        else if (pct <= 70) label.innerText = `⚙️ 스펙 데이터 추출 중... ${pct}%`;
+        else if (pct < 100) label.innerText = `🎨 이미지 렌더링 중... ${pct}%`;
+        else {
+            label.innerText = '✅ 완료! 100%';
+            fill.style.width = '100%';
+            clearInterval(iv);
+            generatedCanvas = drawSpecImage(modelName);
+            wrap.appendChild(generatedCanvas);
+            document.getElementById('dlBtn').style.display = 'block';
         }
+        fill.style.width = pct + '%';
+    }, 25);
+}
 
-        function startProcess() {
-            const modelName = document.getElementById('modelInput').value.trim();
-            if (!modelName) { alert('모델명을 입력해주세요!'); return; }
-
-            document.getElementById('placeholderText').style.display = 'none';
-            document.getElementById('imageArea').innerHTML = '';
-            document.getElementById('downloadBtn').style.display = 'none';
-            
-            const container = document.getElementById('progressContainer');
-            const textField = document.getElementById('progressText');
-            const fillBar = document.getElementById('progressBarFill');
-            container.style.display = 'block';
-            
-            let percent = 0;
-            fillBar.style.width = '0%';
-            
-            const interval = setInterval(() => {
-                percent += 5;
-                if (percent <= 30) {
-                    textField.innerText = `🔍 AI 엔진이 인터넷에서 모델명 매칭 중... ${percent}%`;
-                } else if (percent <= 70) {
-                    textField.innerText = `⚙️ 정격 규격 및 인증 고지 데이터 추출 중... ${percent}%`;
-                } else if (percent < 100) {
-                    textField.innerText = `🎨 마음에 드시는 디자인 폼에 데이터 입력 중... ${percent}%`;
-                } else {
-                    textField.innerText = `✅ 스펙 고지정보 이미지 생성 완료! 100%`;
-                    clearInterval(interval);
-                    generateImage(modelName);
-                }
-                fillBar.style.width = percent + '%';
-            }, 30); 
-        }
-
-        function generateImage(modelName) {
-            const parsed = parseModelSpecs(modelName);
-            
-            // 🛠️ 주소 꼬임 문제를 완벽하게 해결한 표준 데이터 구조
-            const chartData = {
-                type: 'data-table',
-                data: [
-                    ['<b>주요 제품 사양 (Key Specs)</b>', ''],
-                    ['제조사 (Brand)', parsed.brand],
-                    ['제품 품목 (Type)', parsed.type],
-                    ['모델명 (Model)', modelName.toUpperCase()],
-                    ['냉방면적 / 용량', parsed.cap],
-                    ['외관 크기 (WxHxD)', parsed.size],
-                    ['제품 무게 (Weight)', parsed.weight],
-                    ['정격 전압 / 소비전력', parsed.power],
-                    ['안전인증 고지번호', parsed.cert],
-                    ['품질보증기준', '소비자분쟁해결기준에 의거 보상 가능']
-                ],
-                options: {
-                    fontSize: 13,
-                    head: { backgroundColor: '#1e3a8a', fontColor: '#ffffff', text: '  ■ PRODUCT SPECIFICATION (제품 상세 고지정보)' }
-                }
-            };
-
-            // URL을 안전하게 인코딩하여 백틱(`) 기호로 한방에 결합
-            const encoded = encodeURIComponent(JSON.stringify(chartData));
-            const apiUrl = `https://quickchart.io/chart?c=${encoded}&format=png&width=700&height=480`;
-
-            // 진짜 화면에 이미지 꽂아넣기
-            const imageArea = document.getElementById('imageArea');
-            const imgTag = document.createElement('img');
-            imgTag.src = apiUrl;
-            imgTag.alt = '상세페이지 결과물';
-            imageArea.appendChild(imgTag);
-            
-            // 다운로드 버튼 열기
-            const downloadBtn = document.getElementById('downloadBtn');
-            downloadBtn.href = apiUrl;
-            downloadBtn.style.display = 'block';
-        }
-    </script>
+function downloadImage() {
+    if (!generatedCanvas) return;
+    const modelName = document.getElementById('modelInput').value.trim().toUpperCase();
+    const link = document.createElement('a');
+    link.download = `스펙고지정보_${modelName}.png`;
+    link.href = generatedCanvas.toDataURL('image/png');
+    link.click();
+}
+</script>
 </body>
 </html>
