@@ -117,7 +117,8 @@ function drawSpecImage(modelName) {
     ];
 
     const W = 750, col1W = 260, headerH = 54, rowH = 42, lastRowH = 65;
-    const H = headerH + (rows.length - 1) * rowH + lastRowH + 10;
+    const footerH = 40;
+    const H = headerH + (rows.length - 1) * rowH + lastRowH + footerH + 10;
 
     const canvas = document.createElement('canvas');
     canvas.width = W * SCALE;
@@ -168,9 +169,19 @@ function drawSpecImage(modelName) {
         }
     });
 
+    // 하단 테두리선
     const bottomY = headerH + (rows.length - 1) * rowH + lastRowH;
     ctx.strokeStyle = '#dde4f0'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, bottomY); ctx.lineTo(W, bottomY); ctx.stroke();
+
+    // 하단 안내문구
+    ctx.fillStyle = '#6b7280';
+    ctx.font = `12px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('해당 모델의 제품 상세 이미지 및 제품 정보는 제조사 홈페이지 또는 매장에서 확인 바랍니다.', W / 2, bottomY + 26);
+    ctx.textAlign = 'left';
+
+    // 바깥 테두리
     ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth = 2;
     ctx.strokeRect(1, 1, W - 2, H - 2);
 
