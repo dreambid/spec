@@ -24,8 +24,6 @@
         .btn-blue { background: #3b82f6; color: white; flex: 1; }
         .btn-blue:hover { background: #2563eb; }
         .btn-row { display: flex; gap: 10px; margin-top: 12px; }
-        .product-name-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-        .product-name-wrap input { margin-bottom: 0; flex: 1; }
         .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
         .spec-table th { background: #1e3a8a; color: white; padding: 10px 14px; font-size: 13px; text-align: left; }
         .spec-table td { padding: 5px 6px; border-bottom: 1px solid #e5e7eb; }
@@ -36,10 +34,18 @@
         .btn-del:hover { background: #fecaca; }
         .btn-add { background: #f0f9ff; color: #0284c7; border: 1px dashed #0284c7; border-radius: 8px; padding: 8px; font-size: 13px; cursor: pointer; width: 100%; font-family: inherit; margin-bottom: 4px; }
         .btn-add:hover { background: #e0f2fe; }
-        .preview-wrap { border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; padding: 16px; display: flex; justify-content: center; align-items: flex-start; min-height: 150px; overflow-x: auto; }
-        canvas { max-width: 100%; display: block; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        .preview-wrap { border: 2px dashed #e5e7eb; border-radius: 12px; background: #f9fafb; padding: 16px; display: flex; justify-content: center; align-items: flex-start; min-height: 150px; overflow: auto; }
+        canvas { display: block; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
         .hidden { display: none; }
         .badge { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 20px; margin-bottom: 8px; }
+        .slider-wrap { background: #f8faff; border-radius: 12px; padding: 20px; margin: 16px 0; }
+        .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+        .slider-row:last-child { margin-bottom: 0; }
+        .slider-label { font-size: 13px; font-weight: bold; color: #374151; width: 40px; }
+        .slider-row input[type="range"] { flex: 1; height: 6px; accent-color: #1e3a8a; cursor: pointer; margin: 0; }
+        .slider-val { font-size: 13px; font-weight: bold; color: #1e3a8a; width: 48px; text-align: right; }
+        .btn-reset { background: #f1f5f9; color: #64748b; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: inherit; }
+        .btn-reset:hover { background: #e2e8f0; }
     </style>
 </head>
 <body>
@@ -85,22 +91,40 @@
         <span class="badge">STEP 3</span>
         <label>이미지 미리보기</label>
         <div class="preview-wrap" id="previewWrap"></div>
+
+        <!-- 크기 조절 슬라이더 -->
+        <div class="slider-wrap">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="font-size:13px; font-weight:bold; color:#374151;">📐 이미지 크기 조절</span>
+                <button class="btn-reset" onclick="resetSliders()">초기화</button>
+            </div>
+            <div class="slider-row">
+                <span class="slider-label">가로</span>
+                <input type="range" id="sliderW" min="50" max="150" value="100" oninput="updateSlider()">
+                <span class="slider-val" id="valW">100%</span>
+            </div>
+            <div class="slider-row">
+                <span class="slider-label">세로</span>
+                <input type="range" id="sliderH" min="50" max="150" value="100" oninput="updateSlider()">
+                <span class="slider-val" id="valH">100%</span>
+            </div>
+        </div>
+
         <button class="btn btn-green" onclick="downloadImage()">💾 고화질 이미지 다운로드</button>
     </div>
 </div>
 
 <script>
 let parsedRows = [];
+let baseProductName = '';
 
 function parseSpec() {
     const raw = document.getElementById('rawText').value.trim();
     if (!raw) { alert('텍스트를 붙여넣어주세요!'); return; }
 
-    // 제품명 추출 (첫 줄)
     const firstLine = raw.split('\n')[0].trim();
     document.getElementById('productName').value = firstLine;
 
-    // 스펙 파싱
     const marker = '상품 상세 정보 제공';
     const idx = raw.indexOf(marker);
     const specText = idx >= 0 ? raw.substring(idx + marker.length) : raw;
@@ -115,7 +139,6 @@ function parseSpec() {
     for (let line of lines) {
         line = line.trim();
         if (!line) continue;
-
         if (line === 'KC인증') { inKC = true; continue; }
         if (skipHeaders.includes(line)) continue;
 
@@ -189,29 +212,65 @@ function syncFromTable() {
 
 function generatePreview() {
     syncFromTable();
-    const name = document.getElementById('productName').value.trim();
-    if (!name) { alert('제품명을 확인해주세요!'); return; }
-    const canvas = drawImage(name, parsedRows);
-    window._canvas = canvas;
+    baseProductName = document.getElementById('productName').value.trim();
+    if (!baseProductName) { alert('제품명을 확인해주세요!'); return; }
 
-    const wrap = document.getElementById('previewWrap');
-    wrap.innerHTML = '';
-    canvas.style.maxWidth = '100%';
-    wrap.appendChild(canvas);
+    // 슬라이더 초기화
+    document.getElementById('sliderW').value = 100;
+    document.getElementById('sliderH').value = 100;
+    document.getElementById('valW').innerText = '100%';
+    document.getElementById('valH').innerText = '100%';
+
+    redrawCanvas(100, 100);
 
     document.getElementById('previewCard').classList.remove('hidden');
     document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
 }
 
-function drawImage(productName, rows) {
+function updateSlider() {
+    const wPct = parseInt(document.getElementById('sliderW').value);
+    const hPct = parseInt(document.getElementById('sliderH').value);
+    document.getElementById('valW').innerText = wPct + '%';
+    document.getElementById('valH').innerText = hPct + '%';
+    redrawCanvas(wPct, hPct);
+}
+
+function resetSliders() {
+    document.getElementById('sliderW').value = 100;
+    document.getElementById('sliderH').value = 100;
+    document.getElementById('valW').innerText = '100%';
+    document.getElementById('valH').innerText = '100%';
+    redrawCanvas(100, 100);
+}
+
+function redrawCanvas(wPct, hPct) {
+    const canvas = drawImage(baseProductName, parsedRows, wPct, hPct);
+    window._canvas = canvas;
+    const wrap = document.getElementById('previewWrap');
+    wrap.innerHTML = '';
+    canvas.style.maxWidth = '100%';
+    wrap.appendChild(canvas);
+}
+
+function drawImage(productName, rows, wPct = 100, hPct = 100) {
     const FONT = '"Malgun Gothic", "Noto Sans KR", sans-serif';
     const SCALE = 3;
-    const W = 750;
-    const col1W = 230;
-    const headerH = 72;
-    const rowH = 40;
-    const footerH = 48;
+    const baseW = 750;
+    const baseRowH = 40;
+    const baseHeaderH = 72;
+    const baseFooterH = 48;
+    const baseCol1W = 230;
+
+    const W = Math.round(baseW * wPct / 100);
+    const rowH = Math.round(baseRowH * hPct / 100);
+    const headerH = Math.round(baseHeaderH * hPct / 100);
+    const footerH = Math.round(baseFooterH * hPct / 100);
+    const col1W = Math.round(baseCol1W * wPct / 100);
     const H = headerH + rows.length * rowH + footerH;
+
+    const fontSize = Math.round(13 * Math.min(wPct, hPct) / 100);
+    const fontSizeSm = Math.round(12 * Math.min(wPct, hPct) / 100);
+    const fontSizeLg = Math.round(18 * Math.min(wPct, hPct) / 100);
 
     const canvas = document.createElement('canvas');
     canvas.width = W * SCALE;
@@ -232,13 +291,13 @@ function drawImage(productName, rows) {
     ctx.fillRect(0, headerH - 3, W, 3);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = `bold 18px ${FONT}`;
+    ctx.font = `bold ${fontSizeLg}px ${FONT}`;
     ctx.textAlign = 'left';
-    ctx.fillText(productName, 20, 38);
+    ctx.fillText(productName, 20, headerH * 0.52);
 
-    ctx.font = `12px ${FONT}`;
+    ctx.font = `${fontSizeSm}px ${FONT}`;
     ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.fillText('제품 상세 고지정보', 20, 58);
+    ctx.fillText('제품 상세 고지정보', 20, headerH * 0.82);
 
     // Rows
     rows.forEach((row, i) => {
@@ -252,16 +311,15 @@ function drawImage(productName, rows) {
         ctx.beginPath(); ctx.moveTo(col1W, y); ctx.lineTo(col1W, y + rowH); ctx.stroke();
 
         ctx.fillStyle = '#1e3a8a';
-        ctx.font = `bold 12px ${FONT}`;
+        ctx.font = `bold ${fontSizeSm}px ${FONT}`;
         ctx.textAlign = 'left';
-        ctx.fillText(row[0], 14, y + 25);
+        ctx.fillText(row[0], 14, y + rowH * 0.62);
 
         ctx.fillStyle = '#1f2937';
-        ctx.font = `13px ${FONT}`;
-        ctx.fillText(row[1], col1W + 12, y + 25);
+        ctx.font = `${fontSize}px ${FONT}`;
+        ctx.fillText(row[1], col1W + 12, y + rowH * 0.62);
     });
 
-    // Table bottom border
     const tableBottom = headerH + rows.length * rowH;
     ctx.strokeStyle = '#e8ecf5';
     ctx.lineWidth = 1;
@@ -271,18 +329,16 @@ function drawImage(productName, rows) {
     ctx.fillStyle = '#f8faff';
     ctx.fillRect(0, tableBottom, W, footerH);
 
-    // design by NonDa
-    ctx.font = `13px ${FONT}`;
+    ctx.font = `${fontSizeSm}px ${FONT}`;
     ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'right';
-    ctx.fillText('design by', W - 68, tableBottom + 30);
+    ctx.fillText('design by', W - Math.round(68 * wPct / 100), tableBottom + footerH * 0.62);
 
-    ctx.font = `bold 14px ${FONT}`;
+    ctx.font = `bold ${fontSize}px ${FONT}`;
     ctx.fillStyle = '#1e3a8a';
     ctx.textAlign = 'right';
-    ctx.fillText('NonDa', W - 16, tableBottom + 30);
+    ctx.fillText('NonDa', W - 16, tableBottom + footerH * 0.62);
 
-    // Outer border
     ctx.strokeStyle = '#1e3a8a';
     ctx.lineWidth = 2;
     ctx.strokeRect(1, 1, W - 2, H - 2);
@@ -292,7 +348,7 @@ function drawImage(productName, rows) {
 
 function downloadImage() {
     if (!window._canvas) return;
-    const name = document.getElementById('productName').value.trim().replace(/\s+/g, '_');
+    const name = (baseProductName || '스펙').replace(/\s+/g, '_');
     const link = document.createElement('a');
     link.download = `스펙_${name}.png`;
     link.href = window._canvas.toDataURL('image/png');
