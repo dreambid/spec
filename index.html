@@ -24,6 +24,8 @@
         .btn-blue { background: #3b82f6; color: white; flex: 1; }
         .btn-blue:hover { background: #2563eb; }
         .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+        .product-name-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .product-name-wrap input { margin-bottom: 0; flex: 1; }
         .spec-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
         .spec-table th { background: #1e3a8a; color: white; padding: 10px 14px; font-size: 13px; text-align: left; }
         .spec-table td { padding: 5px 6px; border-bottom: 1px solid #e5e7eb; }
@@ -47,16 +49,19 @@
     <!-- Step 1 -->
     <div class="card">
         <span class="badge">STEP 1</span>
-        <label>제품명</label>
-        <input type="text" id="productName" placeholder="예: 필립스 32PHN5000 (스탠드)">
         <label>다나와 / 에누리 전체 텍스트 붙여넣기</label>
-        <textarea id="rawText" placeholder="제품 페이지 전체를 복사해서 붙여넣으세요."></textarea>
+        <p class="step-hint">제품 페이지 전체를 복사해서 붙여넣으세요. 제품명은 자동으로 추출돼요!</p>
+        <textarea id="rawText" placeholder="여기에 붙여넣으세요..."></textarea>
         <button class="btn btn-primary" onclick="parseSpec()">📋 스펙 파싱하기</button>
     </div>
 
     <!-- Step 2 -->
     <div class="card hidden" id="editCard">
         <span class="badge">STEP 2</span>
+        <label>제품명 확인 및 수정</label>
+        <p class="step-hint">자동으로 추출된 제품명이에요. 잘못됐으면 직접 수정해주세요!</p>
+        <input type="text" id="productName" placeholder="제품명">
+
         <label>스펙 확인 및 수정</label>
         <p class="step-hint">항목명과 값을 클릭해서 직접 수정할 수 있어요. 행 추가/삭제도 가능해요.</p>
         <table class="spec-table" id="specTable">
@@ -71,14 +76,14 @@
         </table>
         <button class="btn-add" onclick="addRow()">+ 행 추가</button>
         <div class="btn-row">
-            <button class="btn btn-blue" onclick="generatePreview()">👁 미리보기 생성</button>
+            <button class="btn btn-blue" onclick="generatePreview()">🖼 고화질 이미지 만들기</button>
         </div>
     </div>
 
     <!-- Step 3 -->
     <div class="card hidden" id="previewCard">
         <span class="badge">STEP 3</span>
-        <label>미리보기</label>
+        <label>이미지 미리보기</label>
         <div class="preview-wrap" id="previewWrap"></div>
         <button class="btn btn-green" onclick="downloadImage()">💾 고화질 이미지 다운로드</button>
     </div>
@@ -88,19 +93,22 @@
 let parsedRows = [];
 
 function parseSpec() {
-    const name = document.getElementById('productName').value.trim();
-    const raw = document.getElementById('rawText').value;
-    if (!name) { alert('제품명을 입력해주세요!'); return; }
+    const raw = document.getElementById('rawText').value.trim();
     if (!raw) { alert('텍스트를 붙여넣어주세요!'); return; }
 
+    // 제품명 추출 (첫 줄)
+    const firstLine = raw.split('\n')[0].trim();
+    document.getElementById('productName').value = firstLine;
+
+    // 스펙 파싱
     const marker = '상품 상세 정보 제공';
     const idx = raw.indexOf(marker);
     const specText = idx >= 0 ? raw.substring(idx + marker.length) : raw;
 
     const rows = [];
     const lines = specText.split('\n');
-    // Section headers to skip
-    const skipHeaders = ['KC인증','AI기능','세탁코스','세탁방식','조작부','스마트기능','HDMI/USB','지원','추가단자','부가','화질','사운드','게이밍기능','편의기능','냉각','아이스메이커','위생','AI스마트','안전장치','처리기능','투입위치','내부기능','기본'];
+
+    const skipHeaders = ['KC인증','AI기능','세탁코스','세탁방식','조작부','스마트기능','HDMI/USB','지원','추가단자','부가','화질','사운드','게이밍기능','편의기능','냉각','아이스메이커','위생','AI스마트','안전장치','처리기능','투입위치','내부기능','기본','스마트','냉각','규격','사운드'];
 
     let inKC = false;
 
@@ -182,6 +190,7 @@ function syncFromTable() {
 function generatePreview() {
     syncFromTable();
     const name = document.getElementById('productName').value.trim();
+    if (!name) { alert('제품명을 확인해주세요!'); return; }
     const canvas = drawImage(name, parsedRows);
     window._canvas = canvas;
 
@@ -213,15 +222,12 @@ function drawImage(productName, rows) {
     const ctx = canvas.getContext('2d');
     ctx.scale(SCALE, SCALE);
 
-    // Background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, W, H);
 
     // Header
     ctx.fillStyle = '#1e3a8a';
     ctx.fillRect(0, 0, W, headerH);
-
-    // Accent line
     ctx.fillStyle = '#3b82f6';
     ctx.fillRect(0, headerH - 3, W, 3);
 
@@ -265,16 +271,16 @@ function drawImage(productName, rows) {
     ctx.fillStyle = '#f8faff';
     ctx.fillRect(0, tableBottom, W, footerH);
 
-    // "design by nonda"
-    ctx.font = `italic 500 13px ${FONT}`;
+    // design by NonDa
+    ctx.font = `13px ${FONT}`;
     ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'right';
-    ctx.fillText('design by', W - 80, tableBottom + 30);
+    ctx.fillText('design by', W - 68, tableBottom + 30);
 
     ctx.font = `bold 14px ${FONT}`;
     ctx.fillStyle = '#1e3a8a';
     ctx.textAlign = 'right';
-    ctx.fillText('nonda', W - 16, tableBottom + 30);
+    ctx.fillText('NonDa', W - 16, tableBottom + 30);
 
     // Outer border
     ctx.strokeStyle = '#1e3a8a';
