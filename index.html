@@ -350,7 +350,7 @@ function downloadImage() {
     if (!window._canvas) return;
     const name = (baseProductName || '스펙').replace(/\s+/g, '_');
     const link = document.createElement('a');
-    link.download = `스펙_${name}.png`;
+    link.download = `${name}_spec.png`;
     link.href = window._canvas.toDataURL('image/png');
     link.click();
 }
