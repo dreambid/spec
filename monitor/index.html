@@ -191,7 +191,7 @@ SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
   <div class="card">
     <h2>상품 추가</h2>
     <div class="form-row">
-      <input type="text" id="inputUrl" placeholder="11번가 상품 URL을 입력하세요" />
+      <input type="text" id="inputUrl" placeholder="상품 URL을 입력하세요" />
       <button class="btn-add" id="btnAdd" onclick="addProduct()">+ 추가</button>
     </div>
     <p style="margin-top:8px;font-size:12px;color:#9ca3af;">URL 입력 후 추가하면 상품명을 자동으로 가져옵니다.</p>
@@ -227,7 +227,6 @@ SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
 <script>
   const API = 'https://car-join-handhelds-mitchell.trycloudflare.com';
   let refreshTimer = null;
-  let countdown = 3600;
 
   /* 상태 문자열을 HTML 뱃지로 변환 */
   function renderStatus(display) {
@@ -249,7 +248,6 @@ SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
   /* 상품 목록 로드 */
   async function loadProducts() {
     clearInterval(refreshTimer);
-    countdown = 3600;
     document.getElementById('refreshInfo').textContent = '불러오는 중...';
     hideError();
 
@@ -331,19 +329,24 @@ SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
     }
   }
 
-  /* 1시간(3600초) 자동 새로고침 카운트다운 */
+  /* 매시 정각(1:00, 2:00, ...) 자동 새로고침 카운트다운 */
   function startCountdown() {
     const info = document.getElementById('refreshInfo');
-    const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const updatedAt = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
     refreshTimer = setInterval(() => {
-      countdown--;
-      const m = String(Math.floor(countdown / 60)).padStart(2, '0');
-      const s = String(countdown % 60).padStart(2, '0');
-      info.textContent = `마지막 업데이트: ${now} · ${m}:${s} 후 자동 새로고침`;
-      if (countdown <= 0) {
+      const now = new Date();
+      const secondsUntilNextHour = (59 - now.getMinutes()) * 60 + (60 - now.getSeconds());
+
+      if (secondsUntilNextHour <= 0) {
         clearInterval(refreshTimer);
         loadProducts();
+        return;
       }
+
+      const m = String(Math.floor(secondsUntilNextHour / 60)).padStart(2, '0');
+      const s = String(secondsUntilNextHour % 60).padStart(2, '0');
+      info.textContent = `마지막 업데이트: ${updatedAt} · 다음 정각까지 ${m}:${s}`;
     }, 1000);
   }
 
