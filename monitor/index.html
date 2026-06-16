@@ -227,7 +227,7 @@ SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
 <script>
   const API = 'https://car-join-handhelds-mitchell.trycloudflare.com';
   let refreshTimer = null;
-  let countdown = 30;
+  let countdown = 3600;
 
   /* 상태 문자열을 HTML 뱃지로 변환 */
   function renderStatus(display) {
@@ -249,7 +249,7 @@ SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
   /* 상품 목록 로드 */
   async function loadProducts() {
     clearInterval(refreshTimer);
-    countdown = 30;
+    countdown = 3600;
     document.getElementById('refreshInfo').textContent = '불러오는 중...';
     hideError();
 
@@ -331,13 +331,15 @@ SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
     }
   }
 
-  /* 30초 자동 새로고침 카운트다운 */
+  /* 1시간(3600초) 자동 새로고침 카운트다운 */
   function startCountdown() {
     const info = document.getElementById('refreshInfo');
     const now = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     refreshTimer = setInterval(() => {
       countdown--;
-      info.textContent = `마지막 업데이트: ${now} · ${countdown}초 후 자동 새로고침`;
+      const m = String(Math.floor(countdown / 60)).padStart(2, '0');
+      const s = String(countdown % 60).padStart(2, '0');
+      info.textContent = `마지막 업데이트: ${now} · ${m}:${s} 후 자동 새로고침`;
       if (countdown <= 0) {
         clearInterval(refreshTimer);
         loadProducts();
