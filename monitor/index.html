@@ -1,3 +1,4 @@
+SHA: b16fa67f50293574ab7d13d44f0fbb3a929d028d
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -190,10 +191,10 @@
   <div class="card">
     <h2>상품 추가</h2>
     <div class="form-row">
-      <input type="text" id="inputName" placeholder="상품명 (예: 삼성 냉장고 637L)" />
-      <input type="text" id="inputUrl"  placeholder="11번가 상품 URL" />
+      <input type="text" id="inputUrl" placeholder="11번가 상품 URL을 입력하세요" />
       <button class="btn-add" id="btnAdd" onclick="addProduct()">+ 추가</button>
     </div>
+    <p style="margin-top:8px;font-size:12px;color:#9ca3af;">URL 입력 후 추가하면 상품명을 자동으로 가져옵니다.</p>
   </div>
 
   <!-- 오류 배너 -->
@@ -283,30 +284,27 @@
     `).join('');
   }
 
-  /* 상품 추가 */
+  /* 상품 추가 (URL만 입력, 상품명은 서버에서 자동 추출) */
   async function addProduct() {
-    const name = document.getElementById('inputName').value.trim();
-    const url  = document.getElementById('inputUrl').value.trim();
-    if (!name) { alert('상품명을 입력해주세요.'); return; }
-    if (!url)  { alert('상품 URL을 입력해주세요.'); return; }
+    const url = document.getElementById('inputUrl').value.trim();
+    if (!url) { alert('상품 URL을 입력해주세요.'); return; }
 
     const btn = document.getElementById('btnAdd');
     btn.disabled = true;
-    btn.textContent = '추가 중...';
+    btn.textContent = '상품명 추출 중...';
     hideError();
 
     try {
       const res = await fetch(`${API}/api/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url }),
+        body: JSON.stringify({ url }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || `서버 오류 (${res.status})`);
       }
-      document.getElementById('inputName').value = '';
-      document.getElementById('inputUrl').value  = '';
+      document.getElementById('inputUrl').value = '';
       await loadProducts();
     } catch (e) {
       showError(`추가 실패: ${e.message}`);
@@ -362,10 +360,8 @@
   }
 
   /* Enter 키로 추가 */
-  ['inputName','inputUrl'].forEach(id => {
-    document.getElementById(id).addEventListener('keydown', e => {
-      if (e.key === 'Enter') addProduct();
-    });
+  document.getElementById('inputUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addProduct();
   });
 
   /* 초기 로드 */
@@ -373,3 +369,4 @@
 </script>
 </body>
 </html>
+
