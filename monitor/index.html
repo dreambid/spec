@@ -55,6 +55,19 @@
       transition: border-color 0.15s;
     }
     .form-row input:focus { border-color: #3b82f6; }
+    .form-row select {
+      padding: 10px 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      background: white;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      white-space: nowrap;
+    }
+    .form-row select:focus { border-color: #3b82f6; }
     .btn-add {
       background: #1e3a8a;
       color: white;
@@ -70,6 +83,27 @@
     }
     .btn-add:hover { background: #1d4ed8; }
     .btn-add:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    /* 카테고리 탭 */
+    .cat-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .cat-tab {
+      padding: 7px 18px;
+      border-radius: 20px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .cat-tab:hover { border-color: #93c5fd; color: #1e3a8a; }
+    .cat-tab.active { background: #1e3a8a; border-color: #1e3a8a; color: white; }
 
     /* 상품 테이블 */
     .table-wrap { overflow-x: auto; }
@@ -171,6 +205,7 @@
     @media (max-width: 600px) {
       .form-row { flex-direction: column; }
       .btn-add { width: 100%; }
+      .form-row select { width: 100%; }
       thead th:nth-child(2) { display: none; }
       tbody td:nth-child(2) { display: none; }
     }
@@ -191,17 +226,25 @@
     <h2>상품 추가</h2>
     <div class="form-row">
       <input type="text" id="inputUrl" placeholder="상품 URL을 입력하세요" />
+      <select id="inputCategory">
+        <option value="price_monitor">가격모니터링</option>
+        <option value="competitor">경쟁사모니터링</option>
+      </select>
       <button class="btn-add" id="btnAdd" onclick="addProduct()">+ 추가</button>
     </div>
     <p style="margin-top:8px;font-size:12px;color:#9ca3af;">URL 입력 후 추가하면 상품명을 자동으로 가져옵니다.</p>
-    <p style="margin-top:4px;font-size:11px;color:#b0b8c1;">등록 가능: 11번가, G마켓, 옥션, 롯데온, LG닷컴, 오늘의집, 하이마트 &nbsp;|&nbsp; <span style="color:#cbd5e1;">쿠팡은 수동확인</span></p>
+    <p style="margin-top:4px;font-size:11px;color:#b0b8c1;">등록 가능: 11번가, G마켓, 옥션, 롯데온, LG닷컴, 오늘의집, 하이마트, SSG.COM &nbsp;|&nbsp; <span style="color:#cbd5e1;">쿠팡은 수동확인</span></p>
   </div>
 
   <!-- 오류 배너 -->
   <div class="error-banner" id="errorBanner"></div>
 
-  <!-- 상품 목록 -->
+  <!-- 카테고리 탭 + 상품 목록 -->
   <div class="card">
+    <div class="cat-tabs">
+      <button class="cat-tab active" id="tab-price_monitor" onclick="switchTab('price_monitor')">가격 모니터링</button>
+      <button class="cat-tab" id="tab-competitor" onclick="switchTab('competitor')">경쟁사 모니터링</button>
+    </div>
     <div class="refresh-bar">
       <span class="refresh-info" id="refreshInfo">불러오는 중...</span>
       <button class="btn-refresh" onclick="loadProducts()">새로고침</button>
@@ -227,6 +270,17 @@
 <script>
   const API = 'https://api.happyonly.com';
   let refreshTimer = null;
+  let allProducts = [];
+  let currentCategory = 'price_monitor';
+
+  /* 카테고리 탭 전환 — API 재호출 없이 메모리에서 필터링 */
+  function switchTab(cat) {
+    currentCategory = cat;
+    document.getElementById('tab-price_monitor').classList.toggle('active', cat === 'price_monitor');
+    document.getElementById('tab-competitor').classList.toggle('active', cat === 'competitor');
+    document.getElementById('inputCategory').value = cat;
+    renderFiltered();
+  }
 
   /* 상태 문자열을 HTML 뱃지로 변환 */
   function renderStatus(display) {
@@ -245,7 +299,7 @@
     return `<span class="status status-instock">${display}</span>`;
   }
 
-  /* 상품 목록 로드 */
+  /* 상품 목록 전체 로드 → 메모리 저장 → 탭 기준 필터링 */
   async function loadProducts() {
     clearInterval(refreshTimer);
     document.getElementById('refreshInfo').textContent = '불러오는 중...';
@@ -254,8 +308,8 @@
     try {
       const res = await fetch(`${API}/api/products`);
       if (!res.ok) throw new Error(`서버 오류 (${res.status})`);
-      const products = await res.json();
-      renderTable(products);
+      allProducts = await res.json();
+      renderFiltered();
       startCountdown();
     } catch (e) {
       showError(`API 연결 실패: ${e.message}`);
@@ -263,6 +317,12 @@
         '<tr><td colspan="4"><div class="empty">데이터를 불러올 수 없습니다.</div></td></tr>';
       startCountdown();
     }
+  }
+
+  /* 현재 탭 카테고리로 필터링 후 렌더 */
+  function renderFiltered() {
+    const filtered = allProducts.filter(p => (p.category || 'price_monitor') === currentCategory);
+    renderTable(filtered);
   }
 
   /* 테이블 렌더링 */
@@ -282,9 +342,10 @@
     `).join('');
   }
 
-  /* 상품 추가 (URL만 입력, 상품명은 서버에서 자동 추출) */
+  /* 상품 추가 — category 포함해서 전송, 완료 후 해당 탭으로 전환 */
   async function addProduct() {
     const url = document.getElementById('inputUrl').value.trim();
+    const category = document.getElementById('inputCategory').value;
     if (!url) { alert('상품 URL을 입력해주세요.'); return; }
 
     const btn = document.getElementById('btnAdd');
@@ -296,13 +357,16 @@
       const res = await fetch(`${API}/api/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, category }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || `서버 오류 (${res.status})`);
       }
       document.getElementById('inputUrl').value = '';
+      currentCategory = category;
+      document.getElementById('tab-price_monitor').classList.toggle('active', category === 'price_monitor');
+      document.getElementById('tab-competitor').classList.toggle('active', category === 'competitor');
       await loadProducts();
     } catch (e) {
       showError(`추가 실패: ${e.message}`);
@@ -322,7 +386,7 @@
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || `서버 오류 (${res.status})`);
-      }
+    }
       await loadProducts();
     } catch (e) {
       showError(`삭제 실패: ${e.message}`);
@@ -374,6 +438,3 @@
 </script>
 </body>
 </html>
-
-
-
