@@ -55,19 +55,6 @@
       transition: border-color 0.15s;
     }
     .form-row input:focus { border-color: #3b82f6; }
-    .form-row select {
-      padding: 10px 14px;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
-      background: white;
-      cursor: pointer;
-      transition: border-color 0.15s;
-      white-space: nowrap;
-    }
-    .form-row select:focus { border-color: #3b82f6; }
     .btn-add {
       background: #1e3a8a;
       color: white;
@@ -83,6 +70,9 @@
     }
     .btn-add:hover { background: #1d4ed8; }
     .btn-add:disabled { background: #93c5fd; cursor: not-allowed; }
+    .btn-add-competitor { background: #065f46; }
+    .btn-add-competitor:hover { background: #047857; }
+    .btn-add-competitor:disabled { background: #6ee7b7; cursor: not-allowed; }
 
     /* 카테고리 탭 */
     .cat-tabs {
@@ -205,7 +195,6 @@
     @media (max-width: 600px) {
       .form-row { flex-direction: column; }
       .btn-add { width: 100%; }
-      .form-row select { width: 100%; }
       thead th:nth-child(2) { display: none; }
       tbody td:nth-child(2) { display: none; }
     }
@@ -226,11 +215,8 @@
     <h2>상품 추가</h2>
     <div class="form-row">
       <input type="text" id="inputUrl" placeholder="상품 URL을 입력하세요" />
-      <select id="inputCategory">
-        <option value="price_monitor">가격모니터링</option>
-        <option value="competitor">경쟁사모니터링</option>
-      </select>
-      <button class="btn-add" id="btnAdd" onclick="addProduct()">+ 추가</button>
+      <button class="btn-add" id="btnAddPrice" onclick="addProduct('price_monitor')">+ 가격모니터링 추가</button>
+      <button class="btn-add btn-add-competitor" id="btnAddCompetitor" onclick="addProduct('competitor')">+ 경쟁사 추가</button>
     </div>
     <p style="margin-top:8px;font-size:12px;color:#9ca3af;">URL 입력 후 추가하면 상품명을 자동으로 가져옵니다.</p>
     <p style="margin-top:4px;font-size:11px;color:#b0b8c1;">등록 가능: 11번가, G마켓, 옥션, 롯데온, LG닷컴, 오늘의집, 하이마트, SSG.COM &nbsp;|&nbsp; <span style="color:#cbd5e1;">쿠팡은 수동확인</span></p>
@@ -278,7 +264,6 @@
     currentCategory = cat;
     document.getElementById('tab-price_monitor').classList.toggle('active', cat === 'price_monitor');
     document.getElementById('tab-competitor').classList.toggle('active', cat === 'competitor');
-    document.getElementById('inputCategory').value = cat;
     renderFiltered();
   }
 
@@ -342,15 +327,17 @@
     `).join('');
   }
 
-  /* 상품 추가 — category 포함해서 전송, 완료 후 해당 탭으로 전환 */
-  async function addProduct() {
+  /* 상품 추가 — category 파라미터로 받아 전송, 완료 후 해당 탭으로 전환 */
+  async function addProduct(category) {
     const url = document.getElementById('inputUrl').value.trim();
-    const category = document.getElementById('inputCategory').value;
     if (!url) { alert('상품 URL을 입력해주세요.'); return; }
 
-    const btn = document.getElementById('btnAdd');
-    btn.disabled = true;
-    btn.textContent = '상품명 추출 중...';
+    const btnPrice = document.getElementById('btnAddPrice');
+    const btnComp  = document.getElementById('btnAddCompetitor');
+    btnPrice.disabled = true;
+    btnComp.disabled  = true;
+    if (category === 'price_monitor') btnPrice.textContent = '추출 중...';
+    else btnComp.textContent = '추출 중...';
     hideError();
 
     try {
@@ -371,8 +358,10 @@
     } catch (e) {
       showError(`추가 실패: ${e.message}`);
     } finally {
-      btn.disabled = false;
-      btn.textContent = '+ 추가';
+      btnPrice.disabled = false;
+      btnComp.disabled  = false;
+      btnPrice.textContent = '+ 가격모니터링 추가';
+      btnComp.textContent  = '+ 경쟁사 추가';
     }
   }
 
@@ -438,3 +427,4 @@
 </script>
 </body>
 </html>
+
