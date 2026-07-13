@@ -141,6 +141,8 @@
       font-weight: 600;
     }
     thead th:last-child { text-align: center; width: 60px; }
+    thead th:first-child, tbody td:first-child { text-align: center; width: 36px; }
+    .row-check { width: 16px; height: 16px; cursor: pointer; }
     tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
     tbody tr:hover { background: #f8faff; }
     tbody td { padding: 12px 14px; color: #374151; vertical-align: middle; }
@@ -229,8 +231,8 @@
     @media (max-width: 600px) {
       .form-row { flex-direction: column; }
       .btn-add { width: 100%; }
-      thead th:nth-child(2) { display: none; }
-      tbody td:nth-child(2) { display: none; }
+      thead th:nth-child(3) { display: none; }
+      tbody td:nth-child(3) { display: none; }
     }
   </style>
 </head>
@@ -285,6 +287,7 @@
       <table>
         <thead>
           <tr>
+            <th></th>
             <th>상품명</th>
             <th>URL</th>
             <th>상태</th>
@@ -292,7 +295,7 @@
           </tr>
         </thead>
         <tbody id="productBody">
-          <tr><td colspan="4"><div class="loading">불러오는 중...</div></td></tr>
+          <tr><td colspan="5"><div class="loading">불러오는 중...</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -305,6 +308,13 @@
   let allProducts = [];
   let currentCategory = 'price_monitor';
   let currentBrandFilter = ''; // '' = ALL
+  let selectedIds = new Set(); // 체크박스로 선택된 상품 id
+
+  const BRAND_LABELS = {
+    samsung_fridge: '삼성 냉장고', samsung_washer: '삼성 세탁기', samsung_tv: '삼성 TV', samsung_etc: '삼성 그외',
+    lg_fridge: 'LG 냉장고', lg_washer: 'LG 세탁기', lg_tv: 'LG TV', lg_etc: 'LG 그외',
+    other_brand: '기타',
+  };
 
   /* 카테고리 탭 전환 — API 재호출 없이 메모리에서 필터링.
      브랜드 필터는 가격모니터링 탭에서만 보이고 경쟁사 탭에서는 적용 안 함 */
@@ -313,16 +323,61 @@
     document.getElementById('tab-price_monitor').classList.toggle('active', cat === 'price_monitor');
     document.getElementById('tab-competitor').classList.toggle('active', cat === 'competitor');
     document.getElementById('brandTabs').style.display = (cat === 'price_monitor') ? 'flex' : 'none';
+    selectedIds.clear();
     renderFiltered();
   }
 
-  /* 브랜드/제품군 필터 전환 (단일 선택, 라디오 방식) */
+  /* 체크박스 선택/해제 */
+  function toggleSelect(id, checked) {
+    if (checked) selectedIds.add(id);
+    else selectedIds.delete(id);
+  }
+
+  /* pill 버튼 클릭: 체크된 상품이 없으면 필터링(기존 동작), 있으면 일괄 지정 모드.
+     ALL은 지정 대상이 될 수 없어 항상 필터링만 수행한다. */
   function switchBrandFilter(brand) {
+    if (brand !== '' && selectedIds.size > 0) {
+      assignBrandCategory(brand);
+      return;
+    }
     currentBrandFilter = brand;
     document.querySelectorAll('#brandTabs .brand-pill').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.brand === brand);
     });
     renderFiltered();
+  }
+
+  /* 체크된 상품들의 brand_category를 일괄 지정.
+     동시에 여러 PATCH를 쏘면 서버 쪽 읽기→수정→쓰기가 겹쳐 서로 덮어쓸 수 있어
+     (동시쓰기 경합), 반드시 순차적으로(하나씩 await) 호출한다. */
+  async function assignBrandCategory(brand) {
+    const ids = Array.from(selectedIds);
+    const label = BRAND_LABELS[brand] || brand;
+    if (!confirm(`${ids.length}개의 상품을 ${label}로 지정하시겠습니까?`)) return;
+
+    let successCount = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`${API}/api/products/${id}/brand-category`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brand_category: brand }),
+        });
+        if (res.ok) successCount++;
+      } catch (e) {
+        // 실패는 failCount로 집계됨
+      }
+    }
+    const failCount = ids.length - successCount;
+
+    selectedIds.clear();
+    await loadProducts();
+
+    if (failCount === 0) {
+      alert(`${successCount}개의 상품이 지정되었습니다.`);
+    } else {
+      alert(`${successCount}개 지정 완료, ${failCount}개 실패했습니다.`);
+    }
   }
 
   /* 상태 문자열을 HTML 뱃지로 변환 */
@@ -347,6 +402,7 @@
     clearInterval(refreshTimer);
     document.getElementById('refreshInfo').textContent = '불러오는 중...';
     hideError();
+    selectedIds.clear();
 
     try {
       const res = await fetch(`${API}/api/products`);
@@ -357,7 +413,7 @@
     } catch (e) {
       showError(`API 연결 실패: ${e.message}`);
       document.getElementById('productBody').innerHTML =
-        '<tr><td colspan="4"><div class="empty">데이터를 불러올 수 없습니다.</div></td></tr>';
+        '<tr><td colspan="5"><div class="empty">데이터를 불러올 수 없습니다.</div></td></tr>';
       startCountdown();
     }
   }
@@ -377,11 +433,12 @@
   function renderTable(products) {
     const tbody = document.getElementById('productBody');
     if (!products.length) {
-      tbody.innerHTML = '<tr><td colspan="4"><div class="empty">등록된 상품이 없습니다.<br>위 폼에서 상품을 추가해보세요.</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty">등록된 상품이 없습니다.<br>위 폼에서 상품을 추가해보세요.</div></td></tr>';
       return;
     }
     tbody.innerHTML = products.map(p => `
       <tr>
+        <td><input type="checkbox" class="row-check" ${selectedIds.has(p.id) ? 'checked' : ''} onchange="toggleSelect('${p.id}', this.checked)"></td>
         <td class="product-name">${escHtml(p.name)}</td>
         <td class="product-url"><a href="${escHtml(p.url)}" target="_blank" rel="noopener">${escHtml(p.url)}</a></td>
         <td>${renderStatus(p.status_display)}</td>
