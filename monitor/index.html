@@ -353,10 +353,19 @@
   async function assignBrandCategory(brand) {
     const ids = Array.from(selectedIds);
     const label = BRAND_LABELS[brand] || brand;
-    if (!confirm(`${ids.length}개의 상품을 ${label}로 지정하시겠습니까?`)) return;
+
+    // 이미 brand_category가 지정된 상품은 대상에서 제외 (중복 지정 방지)
+    const targets = ids.filter(id => !allProducts.find(p => p.id === id)?.brand_category);
+    const skippedCount = ids.length - targets.length;
+
+    if (targets.length === 0) {
+      alert('선택한 상품이 모두 이미 분류되어 있습니다.');
+      return;
+    }
+    if (!confirm(`${targets.length}개의 상품을 ${label}로 지정하시겠습니까?`)) return;
 
     let successCount = 0;
-    for (const id of ids) {
+    for (const id of targets) {
       try {
         const res = await fetch(`${API}/api/products/${id}/brand-category`, {
           method: 'PATCH',
@@ -368,16 +377,18 @@
         // 실패는 failCount로 집계됨
       }
     }
-    const failCount = ids.length - successCount;
+    const failCount = targets.length - successCount;
 
     selectedIds.clear();
     await loadProducts();
 
-    if (failCount === 0) {
-      alert(`${successCount}개의 상품이 지정되었습니다.`);
-    } else {
-      alert(`${successCount}개 지정 완료, ${failCount}개 실패했습니다.`);
+    let msg = failCount === 0
+      ? `${successCount}개의 상품이 지정되었습니다.`
+      : `${successCount}개 지정 완료, ${failCount}개 실패했습니다.`;
+    if (skippedCount > 0) {
+      msg += ` (이미 지정된 ${skippedCount}개 상품은 제외되었습니다.)`;
     }
+    alert(msg);
   }
 
   /* 상태 문자열을 HTML 뱃지로 변환 */
@@ -487,18 +498,33 @@
 
   /* 상품 삭제 */
   async function deleteProduct(id, name) {
-    if (!confirm(`"${name}" 상품을 삭제할까요?`)) return;
     hideError();
-
     try {
-      const res = await fetch(`${API}/api/products/${id}`, { method: 'DELETE' });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || `서버 오류 (${res.status})`);
-    }
+      if (currentBrandFilter === '') {
+        // ALL 필터: 원본 자체를 완전 삭제 (모니터링 중단)
+        if (!confirm(`"${name}" 상품을 완전히 삭제하시겠습니까? (모니터링에서 제외됩니다)`)) return;
+        const res = await fetch(`${API}/api/products/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || `서버 오류 (${res.status})`);
+        }
+      } else {
+        // 특정 브랜드/제품군 필터: brand_category만 null로 초기화 (원본/모니터링은 유지)
+        const label = BRAND_LABELS[currentBrandFilter] || currentBrandFilter;
+        if (!confirm(`"${name}" 상품을 ${label}에서 빼시겠습니까? (모니터링은 계속됩니다)`)) return;
+        const res = await fetch(`${API}/api/products/${id}/brand-category`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brand_category: null }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || `서버 오류 (${res.status})`);
+        }
+      }
       await loadProducts();
     } catch (e) {
-      showError(`삭제 실패: ${e.message}`);
+      showError(`처리 실패: ${e.message}`);
     }
   }
 
