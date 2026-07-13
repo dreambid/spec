@@ -95,6 +95,40 @@
     .cat-tab:hover { border-color: #93c5fd; color: #1e3a8a; }
     .cat-tab.active { background: #1e3a8a; border-color: #1e3a8a; color: white; }
 
+    /* 브랜드/제품군 필터 (가격모니터링 탭에서만 표시) */
+    .brand-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .brand-pill {
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 2px solid;
+      background: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .brand-pill.black { border-color: #111827; color: #111827; }
+    .brand-pill.black:hover { background: #f3f4f6; }
+    .brand-pill.black.active { background: #111827; color: white; }
+
+    .brand-pill.blue { border-color: #1428a0; color: #1428a0; }
+    .brand-pill.blue:hover { background: #eef1fb; }
+    .brand-pill.blue.active { background: #1428a0; color: white; }
+
+    .brand-pill.red { border-color: #a50034; color: #a50034; }
+    .brand-pill.red:hover { background: #fbeaf0; }
+    .brand-pill.red.active { background: #a50034; color: white; }
+
+    .brand-pill.yellow { border-color: #f59e0b; color: #92400e; }
+    .brand-pill.yellow:hover { background: #fef3e2; }
+    .brand-pill.yellow.active { background: #f59e0b; color: #451a03; }
+
     /* 상품 테이블 */
     .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -231,6 +265,18 @@
       <button class="cat-tab active" id="tab-price_monitor" onclick="switchTab('price_monitor')">가격 모니터링</button>
       <button class="cat-tab" id="tab-competitor" onclick="switchTab('competitor')">경쟁사 모니터링</button>
     </div>
+    <div class="brand-tabs" id="brandTabs">
+      <button class="brand-pill black active" data-brand="" onclick="switchBrandFilter('')">ALL</button>
+      <button class="brand-pill blue" data-brand="samsung_fridge" onclick="switchBrandFilter('samsung_fridge')">냉장고</button>
+      <button class="brand-pill blue" data-brand="samsung_washer" onclick="switchBrandFilter('samsung_washer')">세탁기</button>
+      <button class="brand-pill blue" data-brand="samsung_tv" onclick="switchBrandFilter('samsung_tv')">TV</button>
+      <button class="brand-pill blue" data-brand="samsung_etc" onclick="switchBrandFilter('samsung_etc')">그외</button>
+      <button class="brand-pill red" data-brand="lg_fridge" onclick="switchBrandFilter('lg_fridge')">냉장고</button>
+      <button class="brand-pill red" data-brand="lg_washer" onclick="switchBrandFilter('lg_washer')">세탁기</button>
+      <button class="brand-pill red" data-brand="lg_tv" onclick="switchBrandFilter('lg_tv')">TV</button>
+      <button class="brand-pill red" data-brand="lg_etc" onclick="switchBrandFilter('lg_etc')">그외</button>
+      <button class="brand-pill yellow" data-brand="other_brand" onclick="switchBrandFilter('other_brand')">기타</button>
+    </div>
     <div class="refresh-bar">
       <span class="refresh-info" id="refreshInfo">불러오는 중...</span>
       <button class="btn-refresh" onclick="loadProducts()">새로고침</button>
@@ -258,12 +304,24 @@
   let refreshTimer = null;
   let allProducts = [];
   let currentCategory = 'price_monitor';
+  let currentBrandFilter = ''; // '' = ALL
 
-  /* 카테고리 탭 전환 — API 재호출 없이 메모리에서 필터링 */
+  /* 카테고리 탭 전환 — API 재호출 없이 메모리에서 필터링.
+     브랜드 필터는 가격모니터링 탭에서만 보이고 경쟁사 탭에서는 적용 안 함 */
   function switchTab(cat) {
     currentCategory = cat;
     document.getElementById('tab-price_monitor').classList.toggle('active', cat === 'price_monitor');
     document.getElementById('tab-competitor').classList.toggle('active', cat === 'competitor');
+    document.getElementById('brandTabs').style.display = (cat === 'price_monitor') ? 'flex' : 'none';
+    renderFiltered();
+  }
+
+  /* 브랜드/제품군 필터 전환 (단일 선택, 라디오 방식) */
+  function switchBrandFilter(brand) {
+    currentBrandFilter = brand;
+    document.querySelectorAll('#brandTabs .brand-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.brand === brand);
+    });
     renderFiltered();
   }
 
@@ -304,9 +362,14 @@
     }
   }
 
-  /* 현재 탭 카테고리로 필터링 후 렌더 */
+  /* 현재 탭 카테고리 + (가격모니터링 탭이면) 브랜드 필터까지 적용해서 렌더.
+     ALL(''): brand_category 상관없이(미분류 포함) 전부 표시.
+     특정 브랜드 선택: brand_category가 정확히 일치하는 상품만 표시. */
   function renderFiltered() {
-    const filtered = allProducts.filter(p => (p.category || 'price_monitor') === currentCategory);
+    let filtered = allProducts.filter(p => (p.category || 'price_monitor') === currentCategory);
+    if (currentCategory === 'price_monitor' && currentBrandFilter) {
+      filtered = filtered.filter(p => p.brand_category === currentBrandFilter);
+    }
     renderTable(filtered);
   }
 
